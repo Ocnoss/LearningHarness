@@ -1,0 +1,95 @@
+{
+  "name": "@lh/question-bank",
+  "version": "0.0.4",
+  "private": true,
+  "description": "LH 的题库：题目是资源、作答是事件。含对象层（纯函数）、作答判分、落盘、知识点词表，以及 11 个模型可调用的工具（含 start_practice；add_note：给某次作答记思路/反思的注解：由对话放一张卡片作为刷题入口；import_questions_from_source / verify_pairing：把抽取与配对甩给子 agent）。",
+  "type": "module",
+  "main": "index.js",
+  "exports": {
+    ".": {
+      "default": "./index.js"
+    },
+    "./question": {
+      "default": "./question.js"
+    },
+    "./attempt": {
+      "default": "./attempt.js"
+    },
+    "./bank": {
+      "default": "./bank.js"
+    },
+    "./note": {
+      "default": "./note.js"
+    },
+    "./practice": {
+      "default": "./practice.js"
+    },
+    "./signal": {
+      "default": "./signal.js"
+    },
+    "./style": {
+      "default": "./style.js"
+    },
+    "./topics": {
+      "default": "./topics.js"
+    },
+    "./context": {
+      "default": "./context.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "//dependencies": [
+    "事件存储是**真正的依赖**，必须显式声明。",
+    "原因见 index.js 顶部注释：相对导入 `../lh-event-store/store.js` 只在源码目录成立，",
+    "装进 profile 的 node_modules（pnpm 用复制而非软链、目录名由包名派生）后就断，",
+    "而导入失败会让**整棵插件树加载失败、dsh 完全无法启动**。",
+    "模型白名单硬闸（T4.1）用 @lh/model-tier/model 的 assertWhitelistedModel，同理显式声明。"
+  ],
+  "dependencies": {
+    "@lh/event-store": "file:../lh-event-store",
+    "@lh/model-tier": "file:../lh-model-tier"
+  },
+  "files": [
+    "index.js",
+    "question.js",
+    "attempt.js",
+    "bank.js",
+    "note.js",
+    "practice.js",
+    "signal.js",
+    "style.js",
+    "topics.js",
+    "context.js"
+  ],
+  "lh": {
+    "kind": "capability",
+    "summary": "题库与刷题循环：题目是资源、作答是事件；10 个工具 + 两轴封闭知识点词表 + '刷题走卡片'的运行时上下文",
+    "//inject": [
+      "只留硬依赖：tools（注册工具）与 subagents（录题时 spawn 子 agent）。",
+      "systemPrompt 改成可选（ctx.inject 等它）——硬依赖会让'拿不到 systemPrompt'",
+      "变成'整个插件不激活、10 个工具一起静默消失'，与 course-tree / schedule 同处理（2026-10-13）。"
+    ],
+    "inject": ["tools", "subagents"],
+    "provides": {
+      "tools": [
+        "import_questions",
+        "import_questions_from_source",
+        "verify_pairing",
+        "record_attempt",
+        "add_note",
+        "list_question_banks",
+        "get_questions",
+        "submit_answer",
+        "get_solution",
+        "get_practice_stats",
+        "start_practice"
+      ],
+      "contexts": ["lh:practice-routing"],
+      "events": ["lh/user/attempt", "lh/resource/questions-imported", "lh/security/rejected-model"],
+      "modules": ["@lh/question-bank/topics", "@lh/question-bank/question", "@lh/question-bank/signal"]
+    },
+    "depends_on": ["@lh/event-store", "@lh/model-tier"],
+    "loads_at": "preset",
+    "verified": { "gates": true, "live": true }
+  }
+}

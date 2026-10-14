@@ -1,0 +1,74 @@
+# LH 的 profile bundle —— 把「LH 学习模式」从死掉的 .agent-presets/ 迁到 declaration row。
+#
+# 为什么需要它：本版 dsh（desktop-runtime 0.2.0-rc.2）里
+#   $DSH_HOME/.agent-presets/<id>/ 已经没有任何代码读它。
+#   宿主文档 cordis-composition-reference 的 "Migrate a legacy preset" 一节原话：
+#   "Before declaration rows, a user preset was a directory ... Nothing reads that directory any more."
+# 旧目录里的 16 行按下面的对应关系搬过来；id/name/description/order 取自同目录的 preset.yml。
+#
+# 安装：plugin_manager 的 install_bundle（target = 本目录绝对路径）。
+# 装完后「LH 学习模式」会重新出现在 agent preset 选择器里。
+
+- insert:
+    - id: preset-lh
+      name: '@deepseek-ai/dsh-agent-preset'
+      config:
+        id: lh
+        name: LH 学习模式
+        description: >-
+          LH 插件挂载点。事件存储、坐标记录器、资料索引器、模型档位、题库、
+          断言器（默认关）、学习日程，加一批基础能力（shell / 文件系统 / 后台任务 / 联网）。
+        order: 10
+        plugins:
+          # ── 基础能力：原 agent.cordis.yml 的那 8 行 ──
+          - id: tool-bash
+            name: '@deepseek-ai/dsh-tool-bash'
+            disabled: !!js process.platform === 'win32'
+          - id: tool-pwsh
+            name: '@deepseek-ai/dsh-tool-pwsh'
+            disabled: !!js process.platform !== 'win32'
+          - id: tool-fs
+            name: '@deepseek-ai/dsh-tool-fs'
+          - id: tool-fs-search
+            name: '@deepseek-ai/dsh-tool-fs-search'
+            config:
+              sampleOverCapGlobResults: false
+          - id: tool-jobs
+            name: '@deepseek-ai/dsh-tool-jobs'
+          - id: tool-ask-user
+            name: '@deepseek-ai/dsh-tool-ask-user'
+          - id: tool-todo
+            name: '@deepseek-ai/dsh-tool-todo'
+            config:
+              allowParallelInProgress: true
+          - id: tool-web
+            name: '@deepseek-ai/dsh-tool-web'
+            config:
+              fetch: false
+              searchTimeoutMs: 60000
+
+          # ── LH 能力插件：原 agent.cordis.yml 里除 course-tree / schedule 的部分 ──
+          #
+          # ⚠ course-tree 与 schedule **刻意不在这里**：它们当前挂在 profile 的 host 行上
+          #   （profiles/desktop/cordis.patch.yml 的 lh-course-tree / lh-schedule），
+          #   为的是"所有会话都能用课程与日程工具"。**同一个插件不能同时挂 host 与 preset**
+          #   （tools.register 会撞名）。想收进 LH 模式：删掉那两条 host 行，再把下面两条注释打开。
+          - id: lh-event-store
+            name: '@lh/event-store'
+          - id: lh-recorder-trace
+            name: '@lh/recorder-trace'
+          - id: lh-resource-indexer
+            name: '@lh/resource-indexer'
+          - id: lh-model-tier
+            name: '@lh/model-tier'
+          - id: lh-question-bank
+            name: '@lh/question-bank'
+          - id: lh-asserter
+            name: '@lh/asserter'
+            disabled: true
+
+          # 备选：收进 LH 模式时启用（启用前先删掉 profile patch 里的同名 host 行）
+          # - id: lh-course-tree
+          #   name: '@lh/course-tree'
+          # - id: lh-schedule
+          #   name: '@lh/schedule'

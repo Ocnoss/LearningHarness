@@ -1,0 +1,615 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>LH 抽题建库 · 源码导读与工具清单（现状底册）</title>
+<style>
+  :root {
+    --ink: #1f2430; --muted: #5b6472; --line: #e3e7ee; --bg: #ffffff; --soft: #f6f8fb;
+    --accent: #2f6fed; --warn-bg: #fff8e6; --warn-line: #e0a800; --red-bg: #fff1f0; --red-line: #d4380d;
+    --code-bg: #f2f4f8; --green: #2e7d32;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; padding: 0 0 6rem; color: var(--ink); background: var(--bg);
+         font: 15px/1.75 "Segoe UI", "Microsoft YaHei", system-ui, sans-serif; }
+  .wrap { max-width: 60rem; margin: 0 auto; padding: 0 1.5rem; }
+  header.hero { background: linear-gradient(180deg, #f3f7ff, #ffffff); border-bottom: 1px solid var(--line);
+                padding: 2.2rem 0 1.6rem; margin-bottom: 1.5rem; }
+  h1 { font-size: 1.6rem; margin: 0 0 .4rem; }
+  .sub { color: var(--muted); font-size: .95rem; }
+  h2 { font-size: 1.3rem; margin: 3rem 0 1rem; padding-bottom: .35rem; border-bottom: 2px solid var(--line); }
+  h3 { font-size: 1.08rem; margin: 2rem 0 .6rem; }
+  h4 { font-size: .98rem; margin: 1.4rem 0 .4rem; font-family: Consolas, monospace; }
+  h4 .loc { color: var(--muted); font-family: inherit; font-weight: 400; }
+  p { margin: .55rem 0; }
+  ul { margin: .4rem 0 .8rem; padding-left: 1.4rem; }
+  li { margin: .25rem 0; }
+  code { background: var(--code-bg); border-radius: 4px; padding: .05rem .35rem;
+         font: .88em Consolas, "Courier New", monospace; }
+  pre { background: var(--code-bg); border: 1px solid var(--line); border-radius: 8px;
+        padding: 1rem 1.1rem; overflow-x: auto; font: .84em/1.6 Consolas, "Courier New", monospace; }
+  pre code { background: none; padding: 0; }
+  table { border-collapse: collapse; width: 100%; margin: .8rem 0 1.4rem; font-size: .88rem; }
+  th, td { border: 1px solid var(--line); padding: .45rem .6rem; text-align: left; vertical-align: top; }
+  th { background: var(--soft); }
+  tr:nth-child(even) td { background: #fbfcfe; }
+  .tag { display: inline-block; font-size: .72rem; padding: .05rem .45rem; border-radius: 999px;
+         border: 1px solid var(--line); color: var(--muted); vertical-align: middle; margin-left: .3rem; }
+  .tag.red { color: var(--red-line); border-color: var(--red-line); }
+  .tag.warn { color: var(--warn-line); border-color: var(--warn-line); }
+  .tag.green { color: var(--green); border-color: var(--green); }
+  .card { border: 1px solid var(--line); border-radius: 10px; padding: .9rem 1.1rem; margin: 1rem 0; background: var(--soft); }
+  .card.red { background: var(--red-bg); border-left: 4px solid var(--red-line); }
+  .card.warn { background: var(--warn-bg); border-left: 4px solid var(--warn-line); }
+  .card .ttl { font-weight: 600; margin-bottom: .3rem; }
+  .sig { font-family: Consolas, monospace; font-size: .85rem; background: var(--code-bg);
+         border-radius: 6px; padding: .5rem .7rem; margin: .4rem 0; overflow-x: auto; white-space: pre-wrap; }
+  .req { color: var(--red-line); font-weight: 700; }
+  .muted { color: var(--muted); }
+  nav.toc { background: var(--soft); border: 1px solid var(--line); border-radius: 10px; padding: 1rem 1.3rem; }
+  nav.toc ol { margin: .3rem 0 0; padding-left: 1.3rem; }
+  nav.toc a { color: var(--accent); text-decoration: none; }
+  nav.toc a:hover { text-decoration: underline; }
+  .fn { margin: 1.2rem 0; padding: .8rem 1rem; border: 1px solid var(--line); border-radius: 10px; }
+  .fn h4 { margin-top: 0; }
+  a { color: var(--accent); }
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+  @media (max-width: 800px) { .grid2 { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+<header class="hero">
+<div class="wrap">
+<h1>LH 抽题建库 · 源码导读与工具清单</h1>
+<div class="sub">集约整合前的现状底册 ｜ 2026-09-22 ｜ 覆盖四大功能域：题目提取入库 · 题库内查询检索整理对应 · 挑题输出刷题卡片 · 整理做题历史</div>
+</div>
+</header>
+
+<div class="wrap">
+
+<nav class="toc">
+<strong>目录</strong>
+<ol>
+  <li><a href="#s0">§0 数据流总图（先把全局放在眼前）</a></li>
+  <li><a href="#s1">§1 功能域一：题目提取入库（脚本链 6 件 + 工具 3 件）</a></li>
+  <li><a href="#s2">§2 功能域二：题库内查询检索整理对应（对象层 3 模块 + 工具 3 件）</a></li>
+  <li><a href="#s3">§3 功能域三：按要求挑题、输出刷题卡片（practice/style/signal + 工具 1 件 + lh-practice）</a></li>
+  <li><a href="#s4">§4 功能域四：整理做题历史（attempt + 工具 3 件 + 事件存储）</a></li>
+  <li><a href="#s5">§5 工具总清单（签名级，整合底册）</a></li>
+  <li><a href="#s6">§6 静默失效坑位清单（读码/整合必看）</a></li>
+  <li><a href="#s7">§7 整合接缝速览（哪些边界是为你下一步准备的）</a></li>
+</ol>
+</nav>
+
+<div class="card red">
+<div class="ttl">三条贯穿全文的设计红线（整合时不可破坏）</div>
+<ul>
+<li><strong>答案不进主会话</strong>：录题走 subagent（<code>import_questions_from_source</code>），主会话只回收计数与样例 id；题干与答案留在子 agent 侧。实测反例：一次录 20 题产生 106 次工具调用、答案被念进对话——那正是要根治的形态。</li>
+<li><strong>模型的答案绝不进题库 answer</strong>（ADR-021 决定 3）：answer 一律来自解析册【参考答案】的规则抽取或子 agent 对解析页的转录，<strong>answer 为空宁可不入库</strong>（宁空不编）。</li>
+<li><strong>结构上不可能作弊</strong>：取题路径（<code>get_questions</code> / <code>/bank</code>）只给题面（<code>toPresentableQuestion</code> 显式剥答案）；作答历史只在判分后随 <code>submit_answer</code> 返回；模型代答与人作答分开计数（ADR-018 决定 6）。整合时若合并接口，这三条必须保持"数据不在那条路上"的结构，而不是靠提示词。</li>
+</ul>
+</div>
+
+<h2 id="s0">§0 数据流总图</h2>
+
+<pre>
+                    ┌──── PDF 教材/题册（题本 + 解析是两本书，分页不同）────┐
+                    ↓                                                      │
+              scripts/ocr_pages.py                                         │
+                    ↓                                                      │
+      data/ocr/&lt;册名&gt;/page-XXXX.json   { page, text }                      │
+                    │                                                      │
+        ┌───────────┴─────────────────┐                                    │
+        ↓ 规则侧（零成本·可复现·可审计）  ↓ 模型侧（mimo-v2.5 视觉/文本）       │
+scripts/align_by_question.py     scripts/extract-questions.mjs             │
+  plan → 切题计划                  plan/run/verify 三模式                   │
+  match → 按题对齐报告               （切窗三层→抽题→三道独立校验→重叠复核）  │
+        ↓                              ↓ 题干+选项列表                      │
+scripts/extract_answers.py            │                                    │
+  【参考答案】+ 三重自校验              │                                    │
+  + confidence ｜ option_notes         │                                    │
+        ↓                              │                                    │
+scripts/build_bank.py            scripts/assemble-bank.mjs ←───────────────┘
+  单侧建库（解析侧字段）             --questions --answers 两侧合流
+        ↓                              ↓
+        └──────────→ 题库 JSON（BANK_SCHEMA_VERSION = 1）←──────────┘
+                              ↑ import_questions_from_source（subagent 端到端：抽题+配对+入库）
+                              ↑ import_questions（agent 手上的成题直接入库）
+                    ↓
+      scripts/install-bank.mjs（装库 + 装后验证 + 答案泄漏检查）
+                    ↓
+      &lt;workspace&gt;/lh-questions/&lt;bank&gt;.json   （+ .option-notes.json + .extract-report.json）
+                    ↓
+┌──────────────────────────────────────────────────────────────┐
+│ plugins/lh-question-bank 纯函数层（无 IO 依赖的都能单测）          │
+│   question.js  题目对象归一化 / 派 id / 校验                      │
+│   bank.js      题库落盘·合并（tmp+rename 原子写·去 BOM）           │
+│   topics.js    两轴封闭词表 17 题型 × 5 领域（词表唯一实现）        │
+│   practice.js  挑题策略 / 统计 / toPresentableQuestion 去答案      │
+│   attempt.js   judgeAttempt 三值判分 / lh/user/attempt 组装         │
+│   style.js     卡片样式校验（忽略 + 如实回报 ignored）              │
+│   signal.js    面板启动信号 practice-signal.json（文件会合点）      │
+└──────────────────────────────────────────────────────────────┘
+        ↓ agent 工具（对话侧）                  ↓ plugins/lh-practice（HTTP 服务端）
+  list_question_banks                      GET  /lh/practice/pending   （读信号）
+  get_questions      （题面，无答案）        GET  /lh/practice/bank      （题面，无答案）
+  submit_answer      （判分+记录+揭示）      POST /lh/practice/attempt   （判分+记录+揭示+history）
+  get_solution       （只读题解，不写事件）         ↓
+  get_practice_stats （进度/错题本）         client.js（对话卡片 toolview + 刷题面板 overlay）
+  record_attempt / start_practice                 ↓
+        ↓                                        ↓
+        └────────→ lh/user/attempt 事件 → events.jsonl ←────────────┘
+                   lh/resource/questions-imported（题目=资源：事件+题库文件）
+                              ↓
+        buildAttemptIndex / summarizeAttempts / summarizeProgress（统计只读这条日志）
+</pre>
+
+<p class="muted">两条纪律：①题干归模型、答案归规则（模型自答永不进 answer）；②题本与解析的配对一律"题号+题干文字"定位，<strong>禁止页码位置对应</strong>（实测错配：q4 规则按页配对记成 B，真值是 C）。</p>
+
+<h2 id="s1">§1 功能域一：题目提取入库</h2>
+
+<p>入库前的路有两条：<strong>规则侧脚本链</strong>（可复现、零成本、走 <code>build_bank.py</code>）与<strong>模型侧</strong>（<code>extract-questions.mjs</code> 离线流水线，或 <code>import_questions_from_source</code> 在线 subagent）。两者最终都汇入同一个 <code>importQuestions()</code>（校验→派 id→合并→落盘→记资源事件），<strong>入库收口只有一处</strong>。</p>
+
+<h3>1.1 规则侧脚本链</h3>
+
+<div class="fn">
+<h4>scripts/align_by_question.py <span class="loc">（555 行，子命令 plan / match）</span></h4>
+<ul>
+<li><strong>职责</strong>：把题本页与解析页<strong>按题对齐</strong>（对齐单位是"题"不是"页"），产出对齐报告（每题：套号、题号、题本页、解析定位 located_at、题干全文、选项）。</li>
+<li><strong>关键函数</strong>：<code>locate_by_stem</code>（滑动窗口子序列匹配题干，相似度阈值 0.86）；单调性检查（解析定位必须随题号单调推进）；&lt;0.85 的进 LLM 复核通道。</li>
+<li><strong>设计理由</strong>：两本书分页不同，页级对应必然错；按题干文字在解析全文里找锚点才稳定。</li>
+<li><strong>读码注意</strong>：<code>RE_SET</code> 的"套"字<strong>必须可选</strong>——写成必匹配会把没有"套"字标记的整套题<strong>静默跳过</strong>；噪声行（页眉页脚）跳过但<strong>延续当前块</strong>，页眉可能插在题中间。</li>
+</ul>
+</div>
+
+<div class="fn">
+<h4>scripts/extract_answers.py <span class="loc">（383 行）</span></h4>
+<ul>
+<li><strong>职责</strong>：从解析册里规则抽取【参考答案】+ 讲解 + 选项评注，<strong>每条带自校验</strong>与 confidence。</li>
+<li><strong>关键函数</strong>：<code>load_full_text(ocr_dir)</code>（按页序拼全文保留页界）；<code>strip_promo(text)</code>（切推广文字：<code>公考最新资料/微信XXX</code> 等，逐行截断）；<code>parse_option_annotations(text)</code>（抓 <code>A. …（评注）</code>）；<code>extract_one(block, answer_letter, options, annots)</code>（核心：三重校验+置信度）；<code>main</code>（<code>--report --ocr --out --source-root</code>）。</li>
+<li><strong>三重自校验</strong>：①选项标注法（被指为正确的选项不该带"有误/无中生有"等负面词 NEGATIVE 表）②讲解提及法（"对应C选项，当选"等正则印证）③完整性（每题恰好一个【参考答案】且落在本题范围内，否则报出不猜）。</li>
+<li><strong>confidence 只用两个可靠信号</strong>：<code>answer_in_options</code> + <code>explanation_mentions_answer</code>。选项评注<strong>刻意不参与判断</strong>（双栏页边批注被 OCR 串行，逐行挂不准——<code>measure_loose_annotations.py</code> 实测 20 题只捞对 3 题），评注照实保存但只当证据。</li>
+<li><strong>读码注意（每个都是实测踩过的）</strong>：①<code>RE_EXPLAIN</code> 曾是 <code>[^\n【]*</code>——捕获类遇换行即停，49 题里 46 题解析被截成 26 字残句，且 <code>analysis_available</code> 因"非空"照常显示（<strong>不完整比没有更坏</strong>），现已改为取到下个标记或块末；②<strong>页脚会把答案与所属题隔开</strong>——本题范围找不到【参考答案】时向后探 1200 字（窗紧，防捞下一题答案）；③选项评注<strong>只在【参考答案】之后取</strong>——块范围 [本题解析起点, 下一题解析起点) 会把下一题的选项行包进来（实测 Q9 的评注来自 Q10）；④<code>extract_one</code> 的 <code>annots</code> 必须由调用方传入，在函数内重新解析会把调用方的修正覆盖掉。</li>
+<li><strong>输出</strong>：<code>setNN-extracted.json</code>——items[{set, no, answer:[字母], confidence, analysis, analysis_is_placeholder, option_notes, wrong_option_notes, question_type, …checks}]。讲解不做"干净散文"承诺：正文常只有"文段分析见批注。"8 字指针，此时 <code>analysis_is_placeholder=true</code>，由 <code>build_bank.py</code> 转成 <code>analysis_kind</code> 如实标注。</li>
+</ul>
+</div>
+
+<div class="fn">
+<h4>scripts/build_bank.py <span class="loc">（222 行）</span></h4>
+<ul>
+<li><strong>职责</strong>：规则侧单侧建库——把对齐报告（题本侧 stem/options）与抽取结果（解析侧 answer/analysis/question_type/confidence）合成题库 JSON。</li>
+<li><strong>字段分工</strong>（ADR-020 决定 4）：stem/options 题本取；answer/analysis/question_type/confidence 解析取。</li>
+<li><strong>关键函数</strong>：<code>derive_id</code>（与 question.js 的 <code>deriveQuestionId</code> <strong>同算法</strong>，离线校验用，改一处必须同步另一处）；<code>clean_analysis</code>（不假装完整：占位解析留空 + <code>provenance.analysis_kind</code> 标注来路与质量）。</li>
+<li><strong>三产出</strong>：题库 JSON + <code>.option-notes.json</code>（选项评注单独放，不塞进题面）+ <code>.extract-report.json</code>（抽取质量报告）。</li>
+</ul>
+</div>
+
+<h3>1.2 模型侧流水线</h3>
+
+<div class="fn">
+<h4>scripts/extract-questions.mjs <span class="loc">（599 行，plan / run / verify 三模式）</span></h4>
+<ul>
+<li><strong>职责</strong>：题干+选项的模型抽取流水线。run 模式真调 <code>mimo-v2.5-pro</code>（env <code>XIAOMI_TOKEN_PLAN_AMS_API_KEY</code>）。</li>
+<li><strong>关键函数</strong>：<code>scanPageAnchors</code> + <code>planWindows</code>（切窗三层：分组锚 → 题数预算 14 → 跨页回退）；<code>buildWindowPrompt</code>（单窗提示词）；<code>normalizeForCompare</code> + <code>lcsLength</code> + <code>verifyExtraction</code>（<strong>三道独立校验、不合成总分</strong>：文本保真 LCS ｜ 边界可信题号对账 ｜ 数量对账防幻觉——目录页曾幻觉出 15 道幽灵题）；<code>crossCheck</code>（重叠窗口=免费独立复核，键 <code>(group, number)</code>）。</li>
+<li><strong>读码注意</strong>：词表从插件 import（<code>canonicalTopic</code> 等），<strong>不复制</strong>——插件是词表唯一实现；导出 RE_GROUP/RE_QUESTION_NO 供下游复用。</li>
+</ul>
+</div>
+
+<div class="fn">
+<h4>scripts/assemble-bank.mjs <span class="loc">（350 行）</span></h4>
+<ul>
+<li><strong>职责</strong>：模型侧题干列表 + 规则侧答案列表 → 题库 JSON（两侧合流的收口）。</li>
+<li><strong>用法</strong>：<code>node scripts/assemble-bank.mjs --questions … --answers …</code>；<code>arg()</code> 同时支持 <code>--k=v</code> 与 <code>--k v</code> 两种写法。</li>
+<li><strong>读码注意</strong>：①解析侧字段名是 <code>set</code>/<code>no</code>（不是 set_number/question_no）；②<strong>出处回填必须在 <code>normalizeQuestion</code> 之后按 id 回填</strong>（normalize 只搬认识字段，先填会被丢——2026-09-20 修复）；③复用插件的 <code>normalizeQuestionList / buildBank / fingerprintStem / canonicalTopic</code>；④<code>renderAnalysis</code> 含【各选项评注】拼装。</li>
+</ul>
+</div>
+
+<div class="fn">
+<h4>scripts/install-bank.mjs <span class="loc">（118 行）</span></h4>
+<ul>
+<li><strong>职责</strong>：把题库三件套（题库 JSON + .option-notes.json + .extract-report.json）复制进 <code>&lt;workspace&gt;/lh-questions/</code>。</li>
+<li><strong>装后验证</strong>：用插件自己的 <code>loadBank / listQuestionBanks / getQuestions / getPracticeStats</code> 跑一遍 + <strong>答案泄漏检查</strong>（确认题面路径拿不到 answer），并产 <code>.预览.md</code>。</li>
+</ul>
+</div>
+
+<h3>1.3 入库工具（agent 工具，注册于 plugins/lh-question-bank/index.js）</h3>
+
+<div class="card warn">
+<div class="ttl">共用前提（每个工具 execute 的第一件事）</div>
+<code>workspaceRoot = exec?.agent?.session?.header?.cwd</code> —— 拿不到就抛错。所有工具的工作区都来自会话 cwd，<strong>全局单工作区是已知局限</strong>。
+</div>
+
+<div class="fn">
+<h4>① import_questions <span class="loc">（index.js:652，直接入库口）</span></h4>
+<div class="sig">参数：bank_name<span class="req">*</span> ｜ file_path（文件读入）｜ questions（内联数组）｜ title ｜ source_root ｜ source_file ｜ provenance_model
+输出：bank_path, question_count, added_count, replaced_count, rejected_count, resource_event_id,
+      errors[{index,message}], sample_ids, with_topics_count, unmapped_topics</div>
+<ul>
+<li><strong>链路</strong>：<code>readQuestionSource</code>（file_path 或 questions，容忍数组/{questions}/单对象）→ <code>importQuestions({store, workspaceRoot, bankName, rawList, title, sourceRoot, sourceFile, provenanceModel, sessionRef})</code> → 校验/派 id/合并/原子落盘/记 <code>lh/resource/questions-imported</code>。</li>
+<li><strong>语义</strong>：同 id 重导=修正（覆盖并计 replaced），逐题报错不遇错即停（rejected 如实列出）。</li>
+</ul>
+</div>
+
+<div class="fn">
+<h4>② import_questions_from_source <span class="loc">（index.js:865，端到端抽取入库口）</span></h4>
+<div class="sig">参数：bank_name<span class="req">*</span> ｜ question_pages<span class="req">*</span>（data/ocr/**/page-XXXX.json 绝对路径数组）｜ answer_pages ｜ count（0=不限）
+      ｜ set_number（默认 1）｜ source_file（默认首个题本页路径，重导幂等靠它）｜ source_root ｜ title
+      ｜ model（默认 mimo-v2.5）｜ provider（默认 xiaomi-token-plan-ams）｜ min_confidence（high=3/medium=2/low=1，低于不入库）
+输出：bank_path, question_count, extracted_count, added_count, replaced_count, rejected_count,
+      skipped_low_confidence_count, child_stop_reason, sample_ids, errors, unmapped_topics</div>
+<ul>
+<li><strong>链路</strong>：读页 JSON 的 <code>text</code> 拼成〔页 NNNN〕段 → 派 subagent（<code>ctx.subagents ?? ctx.get('subagents')</code>，<code>sa.start('spawn', {label:'录题…', prompt, parent: exec.agent, agentOptions:{provider,model}, maxDepth:3, signal})</code> → <code>await run.result</code> → <code>run.dispose?.()</code>）→ 解析末尾 <code>```json</code> 代码块（<code>extractJsonValue</code>/<code>scanBalanced</code>）→ <strong>复用 importQuestions()</strong> 入库。</li>
+<li><strong>子提示词里的配对纪律（原文级）</strong>："必须按<strong>题号 + 题干文字</strong>在整段【解析页文本】里定位该题，再读它的【参考答案】；<strong>绝不允许"题本第几页↔解析第几页"的位置对应</strong>"；answer 为空宁空不编；confidence 自评。</li>
+<li><strong>防空答案兜底</strong>：<code>if (answerArr.length === 0) { skippedLow += 1; continue }</code>——没有答案的题不入库。</li>
+<li><strong>失败路径</strong>：解析失败带硬格式提示<strong>重试一次</strong> → 再失败 <code>dumpChildOut</code> 落盘子全文 + 抛错（含 dump 路径）。</li>
+<li><strong>render 只回计数与样例 id</strong>——题干/答案不进主会话（红线一）。</li>
+</ul>
+</div>
+
+<div class="fn">
+<h4>③ verify_pairing <span class="loc">（index.js:1074，入库前"按题对应"体检）</span></h4>
+<div class="sig">参数：question_pages<span class="req">*</span> ｜ answer_pages<span class="req">*</span> ｜ count（默认 30，过盈喂页、取满即止）｜ sample_size（默认 5）
+      ｜ set_number（兜底套号）｜ model（默认 mimo-v2.5）｜ provider
+输出：question_count, answer_count, counts_match, total_extracted, note, question_numbers,
+      answer_letters_in_order, index[{key,q_set,q_no,q_page,a_ref,matched}], sampled[{index,q_head,a_ref,a_head,same,reason}],
+      child_stop_reason</div>
+<ul>
+<li><strong>双轨核对</strong>：机械侧正则抓解析全文的【参考答案】序列（<code>/【参考答案】\s*([A-D]{1,4})/g</code>，<strong>权威</strong>）；LLM 子 agent 两侧同套分题逻辑切题清单，抽 sample_size 对判"是不是同一道题"。</li>
+<li><strong>产出</strong>："套+题号 → 参考答案/页码"索引表 + 抽样判定；<strong>只回索引与判定，不回题干/答案正文</strong>。</li>
+<li><strong>静默退化</strong>：subagents 不可用时返回空壳 + <code>child_stop_reason='subagents_or_parent_unavailable'</code>（不抛错）。</li>
+</ul>
+</div>
+
+<div class="fn">
+<h4>⓪ probe_spawn <span class="loc">（index.js:800，临时探针，Phase 0 验后即删，正常任务勿调用）</span></h4>
+<ul>
+<li>用途：验证 subagent 五件事（a 可达 b 换模型 c read_image d pwsh e structured 回传）。</li>
+<li>它留下的<strong>两条硬约束注释</strong>（整合任何新工具都适用）：工具名<strong>不能带前导下划线</strong>（code-mode 排除 <code>_</code> 前缀工具）；<strong>必须声明 <code>output{schema, render}</code></strong>（缺了 register 抛错、拖垮整个 preset 挂载）。</li>
+</ul>
+</div>
+
+<h2 id="s2">§2 功能域二：题库内查询检索整理对应</h2>
+
+<p>纯函数层三模块构成"题目对象"的全部语义：<code>question.js</code> 定义一道题是什么、<code>bank.js</code> 定义题库怎么落盘、<code>topics.js</code> 定义标签词表。查询工具都只是这三者之上的薄壳。</p>
+
+<div class="fn">
+<h4>plugins/lh-question-bank/question.js <span class="loc">（354 行，题目对象层）</span></h4>
+<ul>
+<li><strong>常量</strong>：<code>QUESTION_KINDS = ['single_choice','multiple_choice','fill_blank','other']</code>；<code>BANK_SCHEMA_VERSION = 1</code>。</li>
+<li><strong>id 派生（唯一一处）</strong>：<code>deriveQuestionId({sourceRoot, sourceFile, number, stem})</code> = <code>'q-' + sha256(sourceRoot|sourceFile|number|fingerprintStem(stem).slice(0,40)).hex.slice(0,12)</code>；<code>fingerprintStem</code> 去空白+全角标点映射半角。<strong>题号不是身份，"套号+套内题号"才是</strong>（每套题号从 1 重启）——<code>number</code> 形如 <code>set1-q7</code>（assemble-bank 侧还有 <code>${group}-q${number}</code> 全局唯一化）。键（source 等输入）退化时 id 变化是<strong>静默的</strong>：同题会当新题重复入库而不是替换。</li>
+<li><code>normalizeAnswer(raw, kind)</code>：显式分隔符才拆；连写 <code>'AC'</code> <strong>只对选择题</strong>拆（填空可能是答案字符串 "AC"）。</li>
+<li><code>normalizeQuestion({raw, origin, provenance})</code>：<strong>报错不猜</strong>（缺题干/答案无法解析/选项标签越界/单选多答案都 throw）；只搬认识字段（多余字段静默丢弃——出处等要后补的字段必须<strong>normalize 之后按 id 回填</strong>）；topics 过 <code>normalizeTopics</code>，认不出的进 <code>unmapped_topics</code> 如实带。</li>
+<li><code>normalizeQuestionList({rawList, origin, provenance}) → {questions, errors[{index,message}], unmappedTopics}</code>：逐题收集错误不遇错即停；<code>number</code> 取 <code>rawList[i]?.number ?? origin?.number ?? i+1</code>。</li>
+<li><code>buildBank({questions, meta})</code>：同 id 去重<strong>保 first</strong> + <code>duplicate_ids</code> 如实报告；<code>validateBank(bank) → {ok, errors}</code>；<code>pickQuestions({bank, ids})</code>。</li>
+</ul>
+</div>
+
+<div class="fn">
+<h4>plugins/lh-question-bank/bank.js <span class="loc">（175 行，题库落盘层）</span></h4>
+<ul>
+<li><code>BANK_DIR_NAME = 'lh-questions'</code>；<code>safeBankName(name)</code>（Windows 非法字符替换、结尾点/空格修剪、60 字上限）；<code>resolveBankPath({workspaceRoot, bankName})</code>。</li>
+<li><code>loadBank(path) → {bank, errors}</code>：<strong>去 BOM</strong>（PowerShell 写文件带 BOM 的坑）；文件不存在<strong>不算错误</strong>；校验不过仍交出内容+errors（调用方决定怎么处置）。</li>
+<li><code>saveBank({path, bank})</code>：<strong>tmp + rename 原子写</strong>（防写一半被读走）。</li>
+<li><code>mergeIntoBank({existing, questions, meta}) → {bank, added, replaced}</code>：同 id 覆盖=修正语义，replaced 如实报。</li>
+<li><code>extractRawQuestions(input)</code>：容忍数组 / {questions} / 单对象三种输入形态。</li>
+</ul>
+</div>
+
+<div class="fn">
+<h4>plugins/lh-question-bank/topics.js <span class="loc">（279 行，两轴封闭词表）</span></h4>
+<ul>
+<li><strong>词表</strong>：<code>QUESTION_TYPES</code> 17 项（题型轴）× <code>DOMAINS</code> 5 项（领域轴）。<strong>插件是词表唯一实现</strong>，脚本一律从插件 import（防漂移）。</li>
+<li><code>canonicalizeLabel / splitTopicLabels / canonicalTopic(raw)</code>：归一化（"主旨概括"→"中心理解"）；<code>normalizeTopics(raw) → {topics, unmapped}</code>——<strong>unmapped 如实回报</strong>不吞；<code>describeTopicVocabulary()</code>（工具描述文案从实现生成）；<code>validateVocabulary()</code>（自检）。</li>
+<li>两轴之外的说法会被归一化认领或如实标"没有匹配的题"——<strong>不猜</strong>。</li>
+</ul>
+</div>
+
+<h3>2.1 查询检索工具</h3>
+
+<div class="fn">
+<h4>⑥ list_question_banks <span class="loc">（index.js:1387）</span></h4>
+<div class="sig">参数：（无）
+输出：bank_count, banks[{ name, ok, title, question_count, source_root:string|null,
+      generated_at:string|null, errors[] }]</div>
+<ul>
+<li>扫工作区 <code>lh-questions/</code> 全部题库并 <code>validateBank</code>；<code>ok=false</code> 表示题库文件坏了需要修。</li>
+<li><strong>坑已固化在注释里</strong>：<code>source_root/generated_at</code> 的 output schema <strong>必须允许 null</strong>——第一版写 <code>type:'string'</code>，真实题库缺来源时宿主拒收整个工具输出；而假 ctx 的离线测试<strong>不做输出校验</strong>，闸门放行。现测试已接宿主 <code>validateJsonSchemaValue</code>。</li>
+</ul>
+</div>
+
+<div class="fn">
+<h4>⑦ get_questions <span class="loc">（index.js:1451，取题·无答案）</span></h4>
+<div class="sig">参数：bank_name<span class="req">*</span> ｜ count（默认 1）｜ order（sequential/random/unseen/attempted/missed）
+      ｜ topic（词表写法，同 start_practice）｜ ids（给了就忽略 order）｜ exclude_ids
+输出：bank_name, total_in_bank, question_count, order（实际生效，可能退化）, note（策略如何被调整）, questions[questionShape]</div>
+<ul>
+<li><strong>questionShape</strong>（题的线格式，与 <code>toPresentableQuestion</code> 严格同构）：<code>{id, kind, stem, options:[{label,text}], topics}</code>。<code>options</code> 带 label 是刻意的：文本界面念"A. 选项内容"，图形界面把同一 label 渲染成按钮——<strong>契约不用改、界面可后加</strong>。</li>
+<li><strong>分工契约（事故后补写进描述的）</strong>："刷题走 <code>start_practice</code> 卡片，本工具只用于'在对话里问一道题'"——原描述只写"把题念给学习者"，等于教模型在对话里刷题（不留作答记录）。render 末尾还带<strong>用后提醒</strong>（"本工具不写作答记录…现在改调 start_practice"）：那是"用错工具"那一刻唯一出现在模型眼前的话。</li>
+<li><code>unseen/attempted/missed</code> 无记录时<strong>退化 sequential 并在 note 说明</strong>，不返回空。</li>
+</ul>
+</div>
+
+<div class="fn">
+<h4>⑨ get_solution <span class="loc">（index.js:1724，只读题解）</span></h4>
+<div class="sig">参数：bank_name<span class="req">*</span> ｜ ids<span class="req">*</span>
+输出：bank_name, solutions:[{ id, number(如 set1-q7|null), stem, options, answer, accept, analysis, analysis_kind }], missing[]</div>
+<ul>
+<li><strong>只读定义级约束：不写任何事件</strong>（有测试断言）。为「AI深解」链而生：深解要求"先自己解→再核对题库解析→分析错因"，而 <code>get_questions</code> 无答案、<code>submit_answer</code> 会写事件——没有这个工具时模型只能撒谎或<strong>往学习史里写假作答污染统计</strong>。</li>
+<li><strong>读码注意（静默失效实录）</strong>：必须传 <code>getQuestions({…, includeAnswer: true})</code>——默认走 <code>toPresentableQuestion</code> 已剥答案，忘传则 answer/analysis <strong>全空且不报错</strong>，整条深解链"正常运行"却永远拿不到证据。</li>
+<li><code>analysis_kind</code> 如实标注来路与质量：原文 / 原文（OCR 可能串行）/ 选项标注拼成 / 无——串行文本<strong>不可当权威原文</strong>给学习者。</li>
+</ul>
+</div>
+
+<p class="muted">④ verify_pairing 见 §1.3——它是"整理对应"语义在入库侧的把关件；入库后的对应关系体现在 <code>question.source.{resource_ref, path, number, page}</code> 与 <code>get_solution</code> 的 <code>number</code>（学习者在纸质资料上找得到的编号）。</p>
+
+<h2 id="s3">§3 功能域三：按用户要求挑选题目、输出刷题卡片</h2>
+
+<p>挑题的全部智能在 <code>practice.js</code> 的纯函数里；"输出刷题卡片"= <code>start_practice</code> 写一个文件信号 → <code>lh-practice</code>（HTTP 服务端 + client.js 前端）读信号渲染卡片与面板。<strong>agent 工具与面板不在同一棵插件树</strong>（工具在 agent preset 作用域、面板在 profile/host 作用域），所以信号走文件会合点 <code>practice-signal.json</code>。</p>
+
+<div class="fn">
+<h4>plugins/lh-question-bank/practice.js <span class="loc">（428 行，挑题与统计纯函数层）</span></h4>
+<ul>
+<li><strong>常量</strong>：<code>ORDER_KINDS = ['sequential','random','unseen','attempted','missed']</code>；<code>ORDER_HINTS</code>（人话映射表，工具描述由它生成）；<code>MAX_IDS = 200</code>。</li>
+<li><code>sanitizeSelection(raw, {ignoreKeys}) → {selection, ignored}</code>：order 认不出退回默认<strong>并报告</strong>；topic 过 <code>canonicalTopic</code>（认不出的<strong>保留原样</strong>交下游报"没有匹配的题"）；<strong>未知键必须看原始 args 报告</strong>——"挑出已知键再校验"=把未知键静默丢掉，模型会永远重复错写法。</li>
+<li><code>selectQuestions({bank, attemptIndex, count=1, order='sequential', topic, ids, excludeIds}) → {questions, order, considered, note}</code>：ids 最优先；unseen/attempted/missed 无记录时退化 sequential 并 note（不返回空）；missed=最近一次答错；random=Fisher-Yates（不改原数组）。</li>
+<li><code>buildAttemptIndex(events) → {byQuestion, attemptedIds}</code>：每题 {attempts, correct, wrong, unjudged, last_at, last_correct}。</li>
+<li><code>toPresentableQuestion(question)</code>：<strong>显式函数去答案</strong>——"去掉答案是这一层的职责，不是调用方的自觉"（结构性防作弊的落点）。</li>
+<li><code>toRevealedQuestion(question)</code>：含 answer/accept/analysis/<code>analysis_kind</code>（从 provenance 取，OCR 串行必须标注）。</li>
+<li><code>summarizeProgress({bank, events, missedLimit=20})</code>：human/other 分桶（ADR-018 决定 6）；accuracy 只算人+判得了的；missed_recent 按 last_at 倒序（错题本数据）。</li>
+<li><code>describeSelection(selection, count)</code>：人话描述（"只出做过的 · 10 道"）——回给 agent 让它照着向学习者复述。</li>
+</ul>
+</div>
+
+<div class="fn">
+<h4>plugins/lh-question-bank/style.js <span class="loc">（246 行，卡片样式校验）</span></h4>
+<ul>
+<li>词表：<code>STYLE_TOKENS</code>（accent/background/font_scale/radius/border/layout 语义档）+ <code>SHOW_ITEMS</code> + <code>STYLE_NUMBERS</code>（preview_questions 0-8、panel_width 320-900）。</li>
+<li><code>sanitizeCardStyle(raw) → {style, ignored}</code>：<strong>校验只在这一处</strong>；不抛错、只忽略 + 如实回报 ignored（防"模型纠错回路把生效值改回去"）；accent 语义档与 "#rrggbb" 双档校验在同一处；<code>describeStyleVocabulary()</code> 从实现生成工具描述。</li>
+<li>客户端只查表兜底，不做第二套校验。</li>
+</ul>
+</div>
+
+<div class="fn">
+<h4>plugins/lh-question-bank/signal.js <span class="loc">（133 行，面板启动信号=文件会合点）</span></h4>
+<ul>
+<li><code>practiceSignalPath()</code>：<code>LH_EVENT_LOG</code> 同目录或 <code>dataFile('practice-signal.json')</code>。<strong>曾写死绝对路径 <code>D:\LearningHarnessv0.1\…</code></strong>——换机器就静默失效，现走解析。</li>
+<li><code>readPracticeSignal() → {seq, at, by, bank, count, style, selection}</code>：文件损坏=seq 0，<strong>不抛错</strong>；style/selection 在此<strong>不二次校验</strong>（校验只有一处，在写入侧）。</li>
+<li><code>requestPracticePanel({bank, count, by='agent', style, selection})</code>：seq 递增、tmp+rename 原子写。</li>
+</ul>
+</div>
+
+<div class="fn">
+<h4>⑪ start_practice <span class="loc">（index.js:1968，对话卡片入口）</span></h4>
+<div class="sig">参数：bank_name（省略=面板用第一个题库）｜ count（省略=学习者面板里选）｜ order（ORDER_KINDS）｜ topic（封闭词表）
+      ｜ ids（给了就忽略 order；省略 count 时按 ids 道数取）
+      ｜ style{ accent, background, font_scale, radius, border, layout, preview_questions, panel_width,
+              accent_color, background_color, text_color, show[] }
+输出：opened, signal_seq, bank_count, banks[{name,question_count}], chosen_bank(string|null),
+      style_applied, style_ignored[], selection_applied, selection_ignored[]</div>
+<ul>
+<li><strong>职责边界</strong>：不取题、不判分、<strong>不自动弹面板</strong>——只把"开始刷题"卡片放进对话（宿主用 lh-practice 注册的 toolview 渲染器画卡），学习者点卡才开面板。</li>
+<li><strong>调用后契约（写在描述里）</strong>：①告诉学习者"点上面的卡片"②主动说明能改样式并举例；学习者提样式偏好=<strong>再调一次</strong>本工具（多出一张新样式卡片、旧卡保留对比、不需重启、刷新后仍在）。</li>
+<li><strong>render 的顺序学</strong>：先说 <code>selection_applied</code>（学习者最在意"我说了只练错题，卡片上是什么"）→ 如实报 selection_ignored/style_ignored → bank_count=0 空库提醒 → "没看到卡片"兜底话术（右下角入口按钮 → <code>get_questions</code> 对话带做且<strong>如实告知不记作答</strong>）。卡片路径 key 写错时宿主<strong>静默不渲染</strong>，所以兜底话术是必须的。</li>
+<li>selection/style 均走各自唯一的 sanitize（§ practice.js / style.js），错值不失败、只 ignored。</li>
+</ul>
+</div>
+
+<div class="fn">
+<h4>plugins/lh-practice/index.js <span class="loc">（482 行，服务端半，inject=['webServer']）</span></h4>
+<ul>
+<li><strong>导入红线</strong>：跨插件只用<strong>包名导入</strong>（<code>@lh/question-bank</code>、<code>@lh/question-bank/signal</code>、<code>@lh/event-store/store</code>、<code>@lh/event-store/paths</code>）——相对路径装进 profiles/*/node_modules 后断掉 → ERR_MODULE_NOT_FOUND → <strong>整棵插件树加载失败、dsh 起不来</strong>（头部大注释记录了该事故与修法=file: 依赖）。</li>
+<li><code>resolveWorkspace()</code>：走 <code>workspaceDir()</code>（<code>LH_WORKSPACE</code> 环境变量或 lh-install.json）；<strong>装载不抛错、请求时 503 + 修法文案</strong>（apply() 抛错会炸 dsh）。已知局限：全局单工作区。</li>
+<li><code>buildPracticeView({workspaceRoot, bankName, count, order, excludeIds, topic, ids})</code>：默认 <code>order ?? 'unseen'</code>（sequential 是踩过的坑："再来一题"总出同一道）；给了 ids 就不用 exclude/order；questions <strong>不含 answer/analysis</strong> 但带 <code>number</code>（如 set1-q7，AI深解消息用）与 source_path。</li>
+<li><strong>HTTP 三路由</strong>（前缀 <code>/lh/practice</code>）：
+  <code>GET /pending</code> → 信号透传 {seq, at, bank, count, by, style, selection}；
+  <code>GET /bank?bank=&amp;count=&amp;order=&amp;exclude_ids=&amp;topic=&amp;ids=</code> → 取题（exclude_ids ≤ 200，第二道保险）；
+  <code>POST /attempt {bank, questionId, response, durationMs}</code> → <code>submitAnswer({store, …, source:'human', sessionRef: undefined})</code>，返回 {correct, questionId, response, answer, accept, analysis, analysis_kind, <strong>history</strong>, stem, eventId, stats}——<strong>history（作答史）只在这条判分后路径上出现</strong>。</li>
+</ul>
+</div>
+
+<div class="fn">
+<h4>plugins/lh-practice/client.js <span class="loc">（2124 行，前端半：对话卡片 + 刷题面板）</span></h4>
+<ul>
+<li>两个槽位：<code>tool.call.toolview</code>（key='start_practice'，画对话卡片）+ <code>shell.overlay</code>（右下角可拖动面板）；<strong>必须 <code>ctx.slots.inject</code></strong>（漏掉=竞态下不渲染）；<strong>hooks 全在第一个 return 之前</strong>。</li>
+<li>三态样式/选择解析：<code>styleFromBlock / selectionFromBlock</code> —— undefined→读 <code>/pending</code>；null→用默认；object→用这份（样式随那次调用留在会话里，刷新不丢）。</li>
+<li>细节坑：<code>openPanelWith</code> 必须 <code>setCollapsed(false)</code>；文字色按 Rec.709 亮度对背景自动配（readableOn）；<code>shownIds</code> + exclude_ids 保留最近 80 条防连出同题；"AI深解" <code>composeDeepDive</code> 三步顺序（先自解→get_solution 核对→析错因）、<strong>只要有题目就显示按钮</strong>（不限错题）；<code>sendIntoSession</code> 走 <code>sessions.binding(id).session.prompt([...], 'queue')</code>；<code>exports.__test</code> 约 30 个纯函数可单测。</li>
+</ul>
+</div>
+
+<h2 id="s4">§4 功能域四：整理做题历史</h2>
+
+<p>事件体系的分界（ADR-009/017）：<strong>题目=资源</strong>（<code>lh/resource/questions-imported</code> + 题库文件），<strong>作答=事件</strong>（<code>lh/user/attempt</code> + events.jsonl）。作答不可重来、不可取代，所以进事件日志；题目可重排版重导，所以是产物。</p>
+
+<div class="fn">
+<h4>plugins/lh-question-bank/attempt.js <span class="loc">（224 行，作答事件与判分）</span></h4>
+<ul>
+<li><strong>常量</strong>：<code>ATTEMPT_EVENT_TYPE = 'lh/user/attempt'</code>；<code>ATTEMPT_SOURCES = ['human','llm','imported']</code>（人与模型的作答<strong>必须可区分</strong>——否则"模型答对了"会被算成"我会了"）；<code>ATTEMPT_SCHEMA_VERSION = 1</code>。</li>
+<li><code>judgeAttempt({question, response}) → true|false|null</code>：<strong>三值</strong>——null=无法判定，<strong>不默认算错</strong>（混进 false 会让正确率凭空变低且在数据里看不出来）。选择题=选项集合相等（多选顺序无关）；填空题=fold 空白+小写后匹配 answer∪accept，<strong>不做同义替换</strong>（"四十二"与"42"是两回事，靠 accept 显式声明）。</li>
+<li><code>buildAttempt({question, response, source='human', correct, durationMs, sessionRef, seq})</code> → 可直接交 <code>lhEvents.append</code> 的 data{question_id, response, correct, source, duration_ms, context:{session_ref, seq}}。context 是"现在不记以后没有"字段（写细读粗，契约 §1.3）；response 原样保留（归一化留给判分与统计）。</li>
+<li><code>extractAttempts(events) → {attempts, malformed}</code>：malformed <strong>如实报告不丢弃</strong>。</li>
+<li><code>summarizeAttempts({attempts, source})</code>：accuracy 分母只算判得了的（judged=0 时是 null 不是 0——"没数据"≠"全错"）；<strong>last_at/last_response/last_correct 三个字段必须在同一 if 里更新</strong>（分开写迟早漂移："上次答了 X"配另一个时间，且没人会发现）。</li>
+</ul>
+</div>
+
+<div class="fn">
+<h4>plugins/lh-event-store/index.js <span class="loc">（186 行，inject=['sessions']）</span></h4>
+<ul>
+<li>提供事件存储（<code>@lh/event-store/store</code> 的 <code>lhEvents</code>：append / all）与路径（<code>@lh/event-store/paths</code>：events.jsonl 定位）。<strong>它自己不写事件</strong>（判断归记录器，ADR-006）。</li>
+<li>投影 key <code>'lhEvents'</code> <strong>原样返回同一引用</strong>（Object.is 变更门，防重复触发）；自检失败不抛错但跳过投影注册。</li>
+<li>另有 trace-reader.js（lh-recorder-trace 消费会话 trace）；purge-foreign-trace.mjs 清外来 trace。</li>
+</ul>
+</div>
+
+<div class="fn">
+<h4>⑤ record_attempt <span class="loc">（index.js:1249，对话侧记作答）</span></h4>
+<div class="sig">参数：bank_name<span class="req">*</span> ｜ question_id<span class="req">*</span> ｜ response<span class="req">*</span>（"A" / "A、C" / 填空文本）｜ source<span class="req">*</span>（human/llm/imported）｜ duration_ms
+输出：correct(true|false|null), attempt_event_id, question_id, source, expected[], stem(截 60 字)</div>
+<ul>
+<li>自动判分（judgeAttempt）；判不了记 null 并在 render 明说"没有被算成答错"。描述里钉死：<strong>如实填 source</strong>，模型答对不是学习证据。</li>
+</ul>
+</div>
+
+<div class="fn">
+<h4>⑧ submit_answer <span class="loc">（index.js:1562，判分+记录+揭示一步）</span></h4>
+<div class="sig">参数：bank_name<span class="req">*</span> ｜ question_id<span class="req">*</span> ｜ response<span class="req">*</span> ｜ source（默认 human；llm 仅"学习者要求示范"）｜ duration_ms
+输出：correct, question_id, response(回显), source, attempt_event_id, stem, options, answer[], accept[],
+      analysis, analysis_kind,
+      history_attempts, history_last_response, history_last_correct, history_last_at</div>
+<ul>
+<li><strong>"记录+揭示"刻意合成一个动作</strong>（拆开=打开"先看答案再作答"缺口）。history_* 来自 <code>priorHistoryOf</code>——<code>recordAttempt</code> <strong>写入之前</strong>算好的"本次之前"历史。</li>
+<li><strong>结构性防作弊</strong>：history_* 只在本工具出现，<code>get_questions</code> 绝不带——"作答前不知道历史"不靠提醒模型，而是数据不在那条路上。render 里也钉了口径：历史只在本次作答<strong>之后</strong>告诉学习者。</li>
+<li>答错且无解析时 render 明示"需要你自己讲——别编造标准答案之外的依据"。</li>
+</ul>
+</div>
+
+<div class="fn">
+<h4>⑩ get_practice_stats <span class="loc">（index.js:1855，进度/错题本）</span></h4>
+<div class="sig">参数：bank_name<span class="req">*</span>
+输出：bank_name, total_questions, attempted_questions, coverage(number|null), accuracy(number|null),
+      human_correct, human_wrong, human_unjudged, llm_attempts, missed_recent:[{id, stem, wrong_count, last_at:string|null}]</div>
+<ul>
+<li>coverage=null 表示空库（"没题"≠"没练"）；accuracy 只算人答+判得了的；human_unjudged 单列不进分母；llm_attempts 单列不计入学习成果。</li>
+</ul>
+</div>
+
+<p class="muted">面板侧同一套判分/记录走 <code>POST /attempt</code>（§3）——<strong>判分口径只有一处实现</strong>（judgeAttempt/submitAnswer），对话与面板两条路共用。</p>
+
+<h2 id="s5">§5 工具总清单（签名级）</h2>
+
+<h3>5.1 agent 工具（plugins/lh-question-bank，11 件）</h3>
+<table>
+<tr><th>#</th><th>工具</th><th>必填参数</th><th>可选参数</th><th>核心输出</th><th>写盘/写事件</th></tr>
+<tr><td>1</td><td><code>import_questions</code><br><span class="muted">index.js:652</span></td><td>bank_name</td><td>file_path｜questions｜title｜source_root｜source_file｜provenance_model</td><td>bank_path, question_count, added/replaced/rejected_count, resource_event_id, sample_ids, unmapped_topics</td><td>题库文件 + 资源事件</td></tr>
+<tr><td>2</td><td><code>probe_spawn</code><br><span class="muted">index.js:800 临时</span></td><td>prompt</td><td>use_schema｜want_model</td><td>tag, detail</td><td>无（trace 除外）</td></tr>
+<tr><td>3</td><td><code>import_questions_from_source</code><br><span class="muted">index.js:865</span></td><td>bank_name, question_pages</td><td>answer_pages｜count｜set_number｜source_file｜source_root｜title｜model｜provider｜min_confidence</td><td>extracted/added/replaced/rejected/skipped_low_confidence_count, child_stop_reason, sample_ids</td><td>题库文件 + 资源事件</td></tr>
+<tr><td>4</td><td><code>verify_pairing</code><br><span class="muted">index.js:1074</span></td><td>question_pages, answer_pages</td><td>count(30)｜sample_size(5)｜set_number｜model｜provider</td><td>counts_match, answer_letters_in_order, index[], sampled[], child_stop_reason</td><td>无（只读体检）</td></tr>
+<tr><td>5</td><td><code>record_attempt</code><br><span class="muted">index.js:1249</span></td><td>bank_name, question_id, response, source</td><td>duration_ms</td><td>correct(true|false|null), attempt_event_id, expected</td><td>作答事件</td></tr>
+<tr><td>6</td><td><code>list_question_banks</code><br><span class="muted">index.js:1387</span></td><td>—</td><td>—</td><td>bank_count, banks[{name, ok, title, question_count, source_root|null, generated_at|null, errors}]</td><td>无</td></tr>
+<tr><td>7</td><td><code>get_questions</code><br><span class="muted">index.js:1451</span></td><td>bank_name</td><td>count(1)｜order｜topic｜ids｜exclude_ids</td><td>total_in_bank, order(实际生效), note, questions[questionShape 无答案]</td><td>无</td></tr>
+<tr><td>8</td><td><code>submit_answer</code><br><span class="muted">index.js:1562</span></td><td>bank_name, question_id, response</td><td>source(human)｜duration_ms</td><td>correct, answer, accept, analysis, analysis_kind, history_*(4 个)</td><td>作答事件</td></tr>
+<tr><td>9</td><td><code>get_solution</code><br><span class="muted">index.js:1724</span></td><td>bank_name, ids</td><td>—</td><td>solutions[{id, number, stem, options, answer, accept, analysis, analysis_kind}], missing</td><td><strong>无（只读，有测试断言）</strong></td></tr>
+<tr><td>10</td><td><code>get_practice_stats</code><br><span class="muted">index.js:1855</span></td><td>bank_name</td><td>—</td><td>coverage, accuracy, human_correct/wrong/unjudged, llm_attempts, missed_recent</td><td>无</td></tr>
+<tr><td>11</td><td><code>start_practice</code><br><span class="muted">index.js:1968</span></td><td>—</td><td>bank_name｜count｜order｜topic｜ids｜style{12 键}</td><td>opened, signal_seq, chosen_bank, style_applied/ignored, selection_applied/ignored</td><td>practice-signal.json</td></tr>
+</table>
+
+<p><strong>questionShape</strong>（get_questions / 面板取题共用的题线格式）：<code>{ id, kind: single_choice|multiple_choice|fill_blank|other, stem, options: [{label, text}], topics: [] }</code>。get_solution / submit_answer 的揭示形态在其上加 <code>answer, accept, analysis, analysis_kind</code>（+ <code>number</code>：纸质资料编号如 set1-q7）。</p>
+
+<h3>5.2 服务端路由（plugins/lh-practice，3 条）</h3>
+<table>
+<tr><th>路由</th><th>入参</th><th>出参</th><th>说明</th></tr>
+<tr><td><code>GET /lh/practice/pending</code></td><td>—</td><td>{seq, at, bank, count, by, style, selection}</td><td>信号透传（卡片三态解析的 undefined 分支）</td></tr>
+<tr><td><code>GET /lh/practice/bank</code></td><td>bank, count, order, exclude_ids(≤200), topic, ids</td><td>{questions(无答案，带 number/source_path), …}</td><td>面板取题；默认 order='unseen'</td></tr>
+<tr><td><code>POST /lh/practice/attempt</code></td><td>{bank, questionId, response, durationMs}</td><td>{correct, response, answer, accept, analysis, analysis_kind, <strong>history</strong>, stem, eventId, stats}</td><td>判分+记录+揭示一步（source 固定 human）</td></tr>
+</table>
+
+<h3>5.3 脚本层（离线链，整合时的命令面）</h3>
+<table>
+<tr><th>脚本</th><th>命令形态</th><th>入</th><th>出</th></tr>
+<tr><td><code>ocr_pages.py</code></td><td>PDF → 页 JSON</td><td>PDF</td><td>data/ocr/&lt;册&gt;/page-XXXX.json {page, text}</td></tr>
+<tr><td><code>align_by_question.py</code></td><td><code>plan</code> / <code>match</code></td><td>题本页 + 解析页 OCR</td><td>对齐报告（每题 located_at / stem / options）</td></tr>
+<tr><td><code>extract_answers.py</code></td><td><code>--report --ocr --out</code></td><td>对齐报告 + 解析 OCR 目录</td><td>setNN-extracted.json（answer + 三重校验 + confidence + option_notes）</td></tr>
+<tr><td><code>build_bank.py</code></td><td>规则侧建库</td><td>对齐报告 + 抽取结果</td><td>题库 JSON + .option-notes.json + .extract-report.json</td></tr>
+<tr><td><code>extract-questions.mjs</code></td><td><code>plan</code> / <code>run</code> / <code>verify</code></td><td>题本页 OCR</td><td>题干+选项列表（三道校验 + 重叠复核）</td></tr>
+<tr><td><code>assemble-bank.mjs</code></td><td><code>--questions --answers</code></td><td>模型侧题干 + 规则侧答案</td><td>题库 JSON（出处按 id 回填）</td></tr>
+<tr><td><code>install-bank.mjs</code></td><td>装库</td><td>题库三件套</td><td>&lt;workspace&gt;/lh-questions/ + 装后验证 + .预览.md</td></tr>
+</table>
+
+<h2 id="s6">§6 静默失效坑位清单</h2>
+
+<p class="muted">这份代码库最反复的事故形态是"<strong>不报错但给错数据</strong>"。以下每条都实测踩过，整合重写时逐条对照。</p>
+
+<h3>A. 抽取与配对侧</h3>
+<table>
+<tr><th>坑</th><th>后果</th><th>正确做法</th></tr>
+<tr><td><code>RE_SET</code> 的"套"字写成必匹配</td><td>没写"套"的整套题被<strong>静默跳过</strong></td><td>可选匹配；题号回绕（大→1）判下一套</td></tr>
+<tr><td>题本↔解析按<strong>页码/位置</strong>对应</td><td>串题错配（实测 q4 记 B 真值 C）</td><td>题号+题干文字定位；data/align/*-extracted.json <strong>不是 ground truth</strong></td></tr>
+<tr><td><code>RE_EXPLAIN</code> 捕获类 <code>[^\n【]*</code></td><td>每题解析截成 26 字残句（46/49 题）且显示"有解析"</td><td>取到下个标记或块末；<strong>不完整比没有更坏</strong></td></tr>
+<tr><td>选项评注从整个块解析</td><td>下一题的选项行被当成本题（Q9↔Q10 串）</td><td>只在【参考答案】<strong>之后</strong>取</td></tr>
+<tr><td><code>extract_one</code> 内部重解析 annots</td><td>覆盖调用方修正</td><td>annots 由调用方传入</td></tr>
+<tr><td>本题范围严格 [start, next)</td><td>页脚把【参考答案】与所属题隔开 → 漏抽</td><td>找不到时向后探（窗 1200 字，防捞下一题）</td></tr>
+<tr><td>answer 空也入库 / 拿模型自答充数</td><td>污染题库</td><td>宁空不编；模型答案绝不进 answer（ADR-021）</td></tr>
+</table>
+
+<h3>B. 入库与对象侧</h3>
+<table>
+<tr><th>坑</th><th>后果</th><th>正确做法</th></tr>
+<tr><td>id 派生键（sourceRoot/sourceFile/number/stem）变化</td><td>同题新 id → 重复入库而非替换，<strong>静默</strong></td><td>source_file 用稳定标签（重导幂等靠它）</td></tr>
+<tr><td><code>number</code> 只用题号</td><td>多套题（每套从 1 重启）互相撞</td><td>身份=套号+套内题号（set1-q7）</td></tr>
+<tr><td>出处等字段在 <code>normalizeQuestion</code> <strong>之前</strong>填</td><td>被"只搬认识字段"丢掉，静默</td><td>normalize 之后<strong>按 id 回填</strong>（2026-09-20 修）</td></tr>
+<tr><td><code>normalizeAnswer</code> 无条件拆连写 "AC"</td><td>填空答案字符串被拆成两项</td><td>连写只对选择题拆</td></tr>
+<tr><td>PowerShell 写出的 JSON 带 BOM</td><td><code>JSON.parse</code> 直接炸</td><td>读入 <code>.replace(/^\uFEFF/, '')</code></td></tr>
+<tr><td>题库写一半被读走</td><td>读到截断 JSON</td><td>tmp + rename 原子写</td></tr>
+<tr><td>把解析串行文本当权威讲义</td><td>学习者读到跳序乱句</td><td><code>analysis_kind</code> 如实标注；给模型当证据可以，给学习者不行</td></tr>
+</table>
+
+<h3>C. 工具契约侧（dsh-tools / 宿主）</h3>
+<table>
+<tr><th>坑</th><th>后果</th><th>正确做法</th></tr>
+<tr><td>工具缺 <code>output{schema, render}</code></td><td>register 抛 <code>tool "X" must declare output</code>，<strong>拖垮整个 preset 挂载</strong>（选 LH 弹回的真凶）</td><td>每个真工具必须声明 output（dsh-tools/lib/index.js:2765）</td></tr>
+<tr><td>工具名带前导下划线</td><td>code-mode 下模型<strong>根本调不到</strong>（lib/index.js:2329 排除 <code>_</code> 前缀）</td><td>命名不带前导下划线</td></tr>
+<tr><td>output schema 字段写 <code>type:'string'</code> 但真实值可 null</td><td>宿主拒收<strong>整个</strong>输出（list_question_banks 实翻车）</td><td><code>oneOf: [string, null]</code>；离线假 ctx 不校验——闸门要接宿主 validateJsonSchemaValue</td></tr>
+<tr><td>跨插件用<strong>相对路径</strong>导入</td><td>装进 profiles/*/node_modules 后断链 → ERR_MODULE_NOT_FOUND → <strong>整棵插件树加载失败、dsh 起不来</strong></td><td>包名导入（@lh/question-bank 等，file: 依赖）</td></tr>
+<tr><td>apply() 里抛错 / 读不到配置就抛</td><td>炸 dsh</td><td>装载不抛错、用时拒绝（请求时 503 + 修法文案）</td></tr>
+<tr><td><code>getQuestions</code> 取题解忘传 <code>includeAnswer:true</code></td><td>answer/analysis 全空<strong>且不报错</strong>，深解链永远没证据</td><td>查题解必须 includeAnswer；测试断言解析非空</td></tr>
+<tr><td>挑题时"挑出已知键再校验"</td><td>未知键静默丢弃 → 模型永远重复错写法</td><td>对着<strong>原始 args</strong> 报告 ignored</td></tr>
+<tr><td>校验抛错拒绝调用</td><td>模型纠错回路把生效值改回去</td><td>不抛错、只忽略 + 如实回报 ignored（style/selection/topics 同一策略）</td></tr>
+<tr><td>unseen/attempted/missed 无记录返回空</td><td>学习者"再来一题"没题</td><td>退化 sequential 并 note 说明</td></tr>
+<tr><td>卡片 key 写错</td><td>宿主<strong>静默不渲染</strong>，学习者只看到"它说放了卡，可是没有"</td><td>render 必须带"没看到卡片"兜底话术（右下角按钮 → get_questions）</td></tr>
+</table>
+
+<h3>D. 前端与运行时侧</h3>
+<table>
+<tr><th>坑</th><th>后果</th><th>正确做法</th></tr>
+<tr><td>hooks 写在第一个 return 之后</td><td>部分渲染路径不生效</td><td>hooks 全在第一个 return 之前</td></tr>
+<tr><td>漏 <code>ctx.slots.inject</code></td><td>槽位竞态下不渲染（实测事故）</td><td>显式 inject</td></tr>
+<tr><td>signal 路径写死绝对路径</td><td>换机器静默失效</td><td>走 LH_EVENT_LOG / dataFile 解析</td></tr>
+<tr><td>三态解析只写两态</td><td>样式来源混乱（"这份样式是哪来的"查不出）</td><td>undefined→/pending、null→默认、object→这份</td></tr>
+<tr><td>openPanelWith 不 setCollapsed(false)</td><td>面板打开但折叠着，像没反应</td><td>显式展开</td></tr>
+<tr><td>last_at/last_response/last_correct 分开 if 更新</td><td>三字段漂移："上次答了 X"配另一时间，无人察觉</td><td>同一 if 内一起更新（attempt.js 注释原话）</td></tr>
+<tr><td>把"判不了"算进正确率分母/分子</td><td>正确率失真（凭空低/虚高）</td><td>unjudged 单列；judged=0 → accuracy=null</td></tr>
+<tr><td>history 随取题路径返回</td><td>作答前就能看到历史（作弊口）</td><td>history 只在判分后出现（结构性）</td></tr>
+<tr><td>agent preset 与面板跨树传内存信号</td><td>根本传不到</td><td>practice-signal.json 文件会合点</td></tr>
+<tr><td>dsh 插件改码后不重启</td><td>旧代码仍在跑（trace.log APPLY_CALLED 时间线为证）</td><td>改完重启 dsh 进程</td></tr>
+</table>
+
+<h2 id="s7">§7 整合接缝速览</h2>
+
+<p>面向"agent 端到端处理、数据流动顺畅"的集约整合，现状里<strong>已经收口</strong>与<strong>仍靠人/脚本串</strong>的分界如下：</p>
+
+<div class="grid2">
+<div class="card">
+<div class="ttl">已收口（整合时保留这些单点）</div>
+<ul>
+<li>入库收口：<code>importQuestions()</code> 一处（校验→派 id→合并→原子写→资源事件）</li>
+<li>id 派生：<code>deriveQuestionId</code> 一处（build_bank.py 的 derive_id 是镜像，需同步）</li>
+<li>判分口径：<code>judgeAttempt</code> 一处（对话/面板两路共用）</li>
+<li>去答案：<code>toPresentableQuestion</code> 一处（"是职责不是调用方的自觉"）</li>
+<li>词表：topics.js / style.js 各一处，工具描述从实现生成</li>
+<li>校验策略：忽略 + 如实回报 ignored，一处 per 域</li>
+</ul>
+</div>
+<div class="card warn">
+<div class="ttl">仍靠人/脚本串（整合的着力点）</div>
+<ul>
+<li>离线链 7 个脚本要<strong>人按序敲命令</strong>（ocr→align→extract_answers→build_bank / extract-questions→assemble-bank→install）——无一个总入口</li>
+<li>规则侧与模型侧的<strong>选择</strong>（哪份资料走哪条链）是人判断</li>
+<li><code>extract-questions.mjs</code> 的 run/verify 与 <code>import_questions_from_source</code> 的 subagent 抽取是<strong>两套并行的模型侧</strong>，产物形状不完全同构</li>
+<li>答案侧字段名两套（规则链 set/no ↔ question.js setN-qM）靠 assemble-bank 翻译</li>
+<li>build_bank.py 的 derive_id 是 question.js 的<strong>手工镜像</strong>（改一处要人记得同步）</li>
+<li>probe_spawn 是临时探针（验完即删），占着工具位</li>
+<li>作答历史的"导入"（ATTEMPT_SOURCES='imported'）只有字段，<strong>没有导入工具</strong></li>
+<li>verify_pairing 与 import_questions_from_source 各自 spawn 子 agent、各自一套 JSON 解析重试（重复的宿主交互骨架）</li>
+</ul>
+</div>
+</div>
+
+<div class="card red">
+<div class="ttl">整合时的三条不可破坏约束（再强调一次）</div>
+①答案不进主会话（子 agent 隔离）②模型答案不进 answer、answer 空不入库 ③取题路径结构性无答案、history 只在判分后、human/llm 分账——这三条是<strong>结构</strong>不是提示词，任何接口合并方案都要保持"数据不在那条路上"。
+</div>
+
+<p class="muted">—— 本底册依据 2026-09-22 时点源码整理。涉及行号：plugins/lh-question-bank/index.js 共 2211 行；其余如各文件标注。ADR 引用：006 事件日志、009 资源记录、016 模型档位、017 题库对象与接口、018 作答分离、020 字段分工、021 答案来源。</p>
+</div>
+</body>
+</html>

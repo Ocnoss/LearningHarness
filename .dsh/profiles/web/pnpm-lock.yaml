@@ -1,0 +1,131 @@
+lockfileVersion: '9.0'
+
+settings:
+  autoInstallPeers: false
+  excludeLinksFromLockfile: false
+
+importers:
+
+  .:
+    dependencies:
+      '@lh/course-tree':
+        specifier: file:../../../plugins/lh-course-tree
+        version: file:../../../plugins/lh-course-tree
+      '@lh/course-ui':
+        specifier: file:../../../plugins/lh-course-ui
+        version: file:../../../plugins/lh-course-ui
+      '@lh/event-store':
+        specifier: file:../../../plugins/lh-event-store
+        version: file:../../../plugins/lh-event-store
+      '@lh/practice':
+        specifier: file:../../../plugins/lh-practice
+        version: file:../../../plugins/lh-practice
+      '@lh/question-bank':
+        specifier: file:../../../plugins/lh-question-bank
+        version: file:../../../plugins/lh-question-bank
+      '@lh/question-bank-ui':
+        specifier: file:../../../plugins/lh-question-bank-ui
+        version: file:../../../plugins/lh-question-bank-ui
+      '@lh/schedule':
+        specifier: file:../../../plugins/lh-schedule
+        version: file:../../../plugins/lh-schedule
+      '@lh/schedule-ui':
+        specifier: file:../../../plugins/lh-schedule-ui
+        version: file:../../../plugins/lh-schedule-ui
+      '@lh/theme':
+        specifier: file:../../../plugins/lh-theme
+        version: file:../../../plugins/lh-theme
+      '@lh/workspace-ui':
+        specifier: file:../../../plugins/lh-workspace-ui
+        version: file:../../../plugins/lh-workspace-ui
+
+packages:
+
+  '@lh/course-tree@file:../../../plugins/lh-course-tree':
+    resolution: {directory: ../../../plugins/lh-course-tree, type: directory}
+
+  '@lh/course-ui@file:../../../plugins/lh-course-ui':
+    resolution: {directory: ../../../plugins/lh-course-ui, type: directory}
+
+  '@lh/event-store@file:../../../plugins/lh-event-store':
+    resolution: {directory: ../../../plugins/lh-event-store, type: directory}
+
+  '@lh/model-tier@file:../../../plugins/lh-model-tier':
+    resolution: {directory: ../../../plugins/lh-model-tier, type: directory}
+
+  '@lh/practice@file:../../../plugins/lh-practice':
+    resolution: {directory: ../../../plugins/lh-practice, type: directory}
+
+  '@lh/question-bank-ui@file:../../../plugins/lh-question-bank-ui':
+    resolution: {directory: ../../../plugins/lh-question-bank-ui, type: directory}
+
+  '@lh/question-bank@file:../../../plugins/lh-question-bank':
+    resolution: {directory: ../../../plugins/lh-question-bank, type: directory}
+
+  '@lh/schedule-ui@file:../../../plugins/lh-schedule-ui':
+    resolution: {directory: ../../../plugins/lh-schedule-ui, type: directory}
+
+  '@lh/schedule@file:../../../plugins/lh-schedule':
+    resolution: {directory: ../../../plugins/lh-schedule, type: directory}
+
+  '@lh/theme@file:../../../plugins/lh-theme':
+    resolution: {directory: ../../../plugins/lh-theme, type: directory}
+
+  '@lh/workspace-ui@file:../../../plugins/lh-workspace-ui':
+    resolution: {directory: ../../../plugins/lh-workspace-ui, type: directory}
+
+  zod@4.6.5:
+    resolution: {integrity: sha512-v5l/aFXZQeai4awLbOpSoHecE9UiMrnfx75tEXLjNonXVARxQ5mOeipTjROUchszUNCqnE+hqAMujRsRHsut2Q==}
+
+snapshots:
+
+  '@lh/course-tree@file:../../../plugins/lh-course-tree':
+    dependencies:
+      '@lh/event-store': file:../../../plugins/lh-event-store
+
+  '@lh/course-ui@file:../../../plugins/lh-course-ui':
+    dependencies:
+      '@lh/course-tree': file:../../../plugins/lh-course-tree
+      '@lh/event-store': file:../../../plugins/lh-event-store
+
+  '@lh/event-store@file:../../../plugins/lh-event-store':
+    dependencies:
+      zod: 4.6.5
+
+  '@lh/model-tier@file:../../../plugins/lh-model-tier':
+    dependencies:
+      '@lh/event-store': file:../../../plugins/lh-event-store
+
+  '@lh/practice@file:../../../plugins/lh-practice':
+    dependencies:
+      '@lh/event-store': file:../../../plugins/lh-event-store
+      '@lh/question-bank': file:../../../plugins/lh-question-bank
+
+  '@lh/question-bank-ui@file:../../../plugins/lh-question-bank-ui':
+    dependencies:
+      '@lh/event-store': file:../../../plugins/lh-event-store
+      '@lh/question-bank': file:../../../plugins/lh-question-bank
+
+  '@lh/question-bank@file:../../../plugins/lh-question-bank':
+    dependencies:
+      '@lh/event-store': file:../../../plugins/lh-event-store
+      '@lh/model-tier': file:../../../plugins/lh-model-tier
+
+  '@lh/schedule-ui@file:../../../plugins/lh-schedule-ui':
+    dependencies:
+      '@lh/course-tree': file:../../../plugins/lh-course-tree
+      '@lh/event-store': file:../../../plugins/lh-event-store
+      '@lh/schedule': file:../../../plugins/lh-schedule
+
+  '@lh/schedule@file:../../../plugins/lh-schedule':
+    dependencies:
+      '@lh/event-store': file:../../../plugins/lh-event-store
+
+  '@lh/theme@file:../../../plugins/lh-theme': {}
+
+  '@lh/workspace-ui@file:../../../plugins/lh-workspace-ui':
+    dependencies:
+      '@lh/course-tree': file:../../../plugins/lh-course-tree
+      '@lh/event-store': file:../../../plugins/lh-event-store
+
+  zod@4.6.5: {}

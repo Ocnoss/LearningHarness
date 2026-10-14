@@ -1,0 +1,144 @@
+lockfileVersion: '9.0'
+
+settings:
+  autoInstallPeers: true
+  excludeLinksFromLockfile: false
+
+importers:
+
+  .:
+    dependencies:
+      '@lh/event-store':
+        specifier: workspace:*
+        version: link:plugins/lh-event-store
+      '@lh/question-bank':
+        specifier: workspace:*
+        version: link:plugins/lh-question-bank
+      '@lh/question-bank-ui':
+        specifier: workspace:*
+        version: link:plugins/lh-question-bank-ui
+      '@lh/schedule':
+        specifier: workspace:*
+        version: link:plugins/lh-schedule
+      '@lh/schedule-ui':
+        specifier: workspace:*
+        version: link:plugins/lh-schedule-ui
+      zod:
+        specifier: ^4.4.3
+        version: 4.6.5
+
+  plugins/lh-asserter:
+    dependencies:
+      '@lh/course-tree':
+        specifier: file:../lh-course-tree
+        version: link:../lh-course-tree
+      '@lh/event-store':
+        specifier: file:../lh-event-store
+        version: link:../lh-event-store
+      '@lh/model-tier':
+        specifier: file:../lh-model-tier
+        version: link:../lh-model-tier
+
+  plugins/lh-course-tree:
+    dependencies:
+      '@lh/event-store':
+        specifier: file:../lh-event-store
+        version: link:../lh-event-store
+
+  plugins/lh-course-ui:
+    dependencies:
+      '@lh/course-tree':
+        specifier: file:../lh-course-tree
+        version: link:../lh-course-tree
+      '@lh/event-store':
+        specifier: file:../lh-event-store
+        version: link:../lh-event-store
+
+  plugins/lh-event-store:
+    dependencies:
+      zod:
+        specifier: ^4.4.3
+        version: 4.6.5
+
+  plugins/lh-model-tier:
+    dependencies:
+      '@lh/event-store':
+        specifier: file:../lh-event-store
+        version: link:../lh-event-store
+
+  plugins/lh-practice:
+    dependencies:
+      '@lh/event-store':
+        specifier: file:../lh-event-store
+        version: link:../lh-event-store
+      '@lh/question-bank':
+        specifier: file:../lh-question-bank
+        version: link:../lh-question-bank
+
+  plugins/lh-question-bank:
+    dependencies:
+      '@lh/event-store':
+        specifier: file:../lh-event-store
+        version: link:../lh-event-store
+      '@lh/model-tier':
+        specifier: file:../lh-model-tier
+        version: link:../lh-model-tier
+
+  plugins/lh-question-bank-ui:
+    dependencies:
+      '@lh/event-store':
+        specifier: file:../lh-event-store
+        version: link:../lh-event-store
+      '@lh/question-bank':
+        specifier: file:../lh-question-bank
+        version: link:../lh-question-bank
+
+  plugins/lh-recorder-trace:
+    dependencies:
+      '@lh/event-store':
+        specifier: file:../lh-event-store
+        version: link:../lh-event-store
+
+  plugins/lh-resource-indexer:
+    dependencies:
+      '@lh/event-store':
+        specifier: file:../lh-event-store
+        version: link:../lh-event-store
+
+  plugins/lh-schedule:
+    dependencies:
+      '@lh/event-store':
+        specifier: file:../lh-event-store
+        version: link:../lh-event-store
+
+  plugins/lh-schedule-ui:
+    dependencies:
+      '@lh/course-tree':
+        specifier: file:../lh-course-tree
+        version: link:../lh-course-tree
+      '@lh/event-store':
+        specifier: file:../lh-event-store
+        version: link:../lh-event-store
+      '@lh/schedule':
+        specifier: file:../lh-schedule
+        version: link:../lh-schedule
+
+  plugins/lh-theme: {}
+
+  plugins/lh-workspace-ui:
+    dependencies:
+      '@lh/course-tree':
+        specifier: file:../lh-course-tree
+        version: link:../lh-course-tree
+      '@lh/event-store':
+        specifier: file:../lh-event-store
+        version: link:../lh-event-store
+
+packages:
+
+  zod@4.6.5:
+    resolution: {integrity: sha512-v5l/aFXZQeai4awLbOpSoHecE9UiMrnfx75tEXLjNonXVARxQ5mOeipTjROUchszUNCqnE+hqAMujRsRHsut2Q==}
+
+snapshots:
+
+  zod@4.6.5: {}

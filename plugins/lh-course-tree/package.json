@@ -1,0 +1,57 @@
+{
+  "name": "@lh/course-tree",
+  "version": "0.3.0",
+  "private": true,
+  "description": "LH 的递归课程树：树是 lh/course/* 事件的投影（事件溯源，ADR-032）。注册 create_course / list_courses / rename_course / enter_course / delete_course 五个工具让 agent 在对话里建树、改名、把会话绑到节点、两段式删课，并从 list_courses 读到每门课挂着哪些对话；把「当前会话属于哪门课」注入运行时上下文；并导出唯一投影实现 tree.js、唯一写入路径 commands.js、唯一目录视图 directory.js 供断言器与界面复用。",
+  "type": "module",
+  "main": "index.js",
+  "exports": {
+    ".": {
+      "default": "./index.js"
+    },
+    "./tree": {
+      "default": "./tree.js"
+    },
+    "./commands": {
+      "default": "./commands.js"
+    },
+    "./directory": {
+      "default": "./directory.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "//dependencies": [
+    "事件存储是**真正的依赖**，必须显式声明（PLUGIN_CONTRACT §3：跨包引用只能用包名 + file:）。",
+    "tree.js 是纯函数、零依赖；commands.js 与 index.js 依赖 @lh/event-store/store。",
+    "四个文件的分工：tree.js=投影（唯一）、commands.js=写入（唯一）、",
+    "directory.js=界面要的目录视图（唯一）、index.js=工具与上下文注入（宿主接缝）。"
+  ],
+  "dependencies": {
+    "@lh/event-store": "file:../lh-event-store"
+  },
+  "files": [
+    "index.js",
+    "tree.js",
+    "commands.js",
+    "directory.js"
+  ],
+  "lh": {
+    "kind": "capability",
+    "summary": "递归课程树：树 = lh/course/* 事件的投影；create_course/list_courses/rename_course/enter_course/delete_course 五工具（list_courses 带每课的对话清单；删课两段式：先看影响面再确认）+ 课程归属注入运行时上下文（order 117）+ 唯一投影 tree.js / 唯一写入 commands.js / 唯一目录视图 directory.js",
+    "//inject": [
+      "只有 tools 是硬依赖。systemPrompt 改成可选（ctx.inject 等它），",
+      "因为硬依赖会让'拿不到 systemPrompt'变成'整个插件不激活、工具一起消失'——",
+      "而本插件 2026-10-08 起要挂 host 层，那一层提供不提供 systemPrompt 未实测。"
+    ],
+    "inject": ["tools"],
+    "provides": {
+      "tools": ["create_course", "list_courses", "rename_course", "enter_course", "delete_course"],
+      "contexts": ["lh:course"],
+      "events": ["lh/course/created", "lh/course/renamed", "lh/course/reparented", "lh/course/session-bound", "lh/course/deleted"],
+      "modules": ["@lh/course-tree/tree", "@lh/course-tree/commands", "@lh/course-tree/directory"]
+    },
+    "depends_on": ["@lh/event-store"],
+    "loads_at": "preset",
+    "verified": { "gates": true, "live": false }
+  }
+}

@@ -1,0 +1,735 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Learning Harness 项目报告 · 2026-09-20</title>
+<style>
+  :root{
+    --bg:#FBF6EE;
+    --card:#FFFFFF;
+    --ink:#2A211A;
+    --muted:#7A6A5A;
+    --line:#E7DCCB;
+    --accent:#D97706;
+    --accent-soft:#FDF0DC;
+    --accent2:#EA580C;
+    --dark:#12212F;
+    --dark2:#1B2A3A;
+    --ok:#2F7D5C;
+    --warn:#B45309;
+    --bad:#B33A3A;
+    --code:#F4EDE2;
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{
+    margin:0;background:var(--bg);color:var(--ink);
+    font-family:"Segoe UI","PingFang SC","Microsoft YaHei",-apple-system,sans-serif;
+    font-size:15.5px;line-height:1.78;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:1020px;margin:0 auto;padding:0 28px 96px}
+
+  /* ---------- header ---------- */
+  header.hero{
+    background:linear-gradient(135deg,#12212F 0%,#1B2A3A 55%,#2C3E50 100%);
+    color:#F6EFE4;padding:56px 28px 48px;margin-bottom:44px;
+    position:relative;overflow:hidden;
+  }
+  header.hero::after{
+    content:"";position:absolute;right:-90px;top:-90px;width:340px;height:340px;
+    border-radius:50%;background:radial-gradient(circle,rgba(217,119,6,.34),transparent 68%);
+  }
+  .hero-inner{max-width:1020px;margin:0 auto;position:relative;z-index:1}
+  .kicker{
+    display:inline-block;font-size:12.5px;letter-spacing:.16em;text-transform:uppercase;
+    color:#F0B76A;border:1px solid rgba(240,183,106,.4);border-radius:999px;
+    padding:4px 14px;margin-bottom:18px;
+  }
+  h1{font-size:36px;line-height:1.28;margin:0 0 12px;letter-spacing:-.5px;color:#FFF9F0}
+  .hero p.sub{margin:0;color:#C7D2DB;font-size:16px;max-width:780px}
+  .hero-meta{margin-top:22px;display:flex;flex-wrap:wrap;gap:10px}
+  .hero-meta span{
+    font-size:12.5px;color:#DCE5EC;background:rgba(255,255,255,.08);
+    border:1px solid rgba(255,255,255,.12);border-radius:6px;padding:5px 11px;
+    font-family:ui-monospace,Consolas,monospace;
+  }
+
+  /* ---------- structure ---------- */
+  h2{
+    font-size:23px;margin:52px 0 6px;letter-spacing:-.3px;
+    display:flex;align-items:baseline;gap:12px;
+  }
+  h2 .n{
+    font-family:ui-monospace,Consolas,monospace;font-size:13px;color:var(--accent);
+    background:var(--accent-soft);border:1px solid #F0DFC4;border-radius:5px;
+    padding:2px 8px;position:relative;top:-3px;
+  }
+  h3{font-size:17px;margin:32px 0 8px;color:#3B2E23}
+  h4{font-size:15px;margin:22px 0 6px;color:#4A3A2C}
+  .lead{color:var(--muted);margin:0 0 22px;font-size:15px}
+  p{margin:0 0 14px}
+  ul,ol{margin:0 0 16px;padding-left:22px}
+  li{margin:5px 0}
+  code{
+    font-family:ui-monospace,Consolas,monospace;font-size:.88em;
+    background:var(--code);border:1px solid var(--line);border-radius:4px;
+    padding:1px 5px;color:#6B4A1E;
+  }
+  a{color:var(--accent2)}
+
+  .card{
+    background:var(--card);border:1px solid var(--line);border-radius:12px;
+    padding:22px 24px;margin:18px 0;
+    box-shadow:0 1px 2px rgba(42,33,26,.03);
+  }
+  .card.tight{padding:16px 20px}
+
+  /* ---------- stats ---------- */
+  .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(158px,1fr));gap:14px;margin:26px 0}
+  .stat{
+    background:var(--card);border:1px solid var(--line);border-radius:11px;
+    padding:16px 16px 14px;
+  }
+  .stat b{display:block;font-size:27px;line-height:1.2;color:var(--accent2);font-weight:700}
+  .stat span{display:block;font-size:12.5px;color:var(--muted);margin-top:3px}
+
+  /* ---------- tables ---------- */
+  table{width:100%;border-collapse:collapse;margin:16px 0;font-size:14.2px}
+  th{
+    text-align:left;background:#F6EEE2;color:#5A4633;font-weight:600;
+    padding:10px 12px;border-bottom:1px solid var(--line);white-space:nowrap;
+  }
+  td{padding:10px 12px;border-bottom:1px solid #F1E8DA;vertical-align:top}
+  tr:last-child td{border-bottom:none}
+  tbody tr:hover{background:#FDFAF4}
+  td.mono,th.mono{font-family:ui-monospace,Consolas,monospace;font-size:13px}
+
+  /* ---------- badges ---------- */
+  .badge{
+    display:inline-block;font-size:11.5px;font-weight:600;border-radius:5px;
+    padding:2px 7px;white-space:nowrap;line-height:1.6;
+  }
+  .k-kernel{background:#E4EEF7;color:#24557F;border:1px solid #C9DEEE}
+  .k-recorder{background:#EDE7F6;color:#5B3E8C;border:1px solid #DCD0EF}
+  .k-capability{background:#FDF0DC;color:#96540A;border:1px solid #F2DCB7}
+  .k-ui{background:#E6F4EC;color:#2A6B4F;border:1px solid #CDE8DA}
+  .k-retired{background:#F0EDE9;color:#8A8378;border:1px solid #E2DCD4}
+  .tag-yes{color:var(--ok);font-weight:600}
+  .tag-no{color:var(--bad);font-weight:600}
+  .tag-part{color:var(--warn);font-weight:600}
+
+  /* ---------- layer diagram ---------- */
+  .layers{margin:24px 0}
+  .layer{
+    border-radius:10px;padding:14px 18px;margin-bottom:9px;border:1px solid;
+    position:relative;
+  }
+  .layer h4{margin:0 0 5px;font-size:15px}
+  .layer p{margin:0;font-size:13.6px;line-height:1.65}
+  .l-host{background:#12212F;color:#E8EFF5;border-color:#12212F}
+  .l-host h4{color:#F0B76A}
+  .l-host p{color:#B9C8D4}
+  .l-cordis{background:#1B2A3A;color:#E8EFF5;border-color:#1B2A3A}
+  .l-cordis h4{color:#F0B76A}
+  .l-cordis p{color:#B9C8D4}
+  .l-lh{background:var(--accent-soft);border-color:#F0DFC4}
+  .l-lh h4{color:#8A4D08}
+  .l-app{background:#E6F4EC;border-color:#CDE8DA}
+  .l-app h4{color:#245C42}
+  .layer .role{
+    position:absolute;right:16px;top:14px;font-size:11.5px;font-family:ui-monospace,Consolas,monospace;
+    opacity:.72;
+  }
+
+  /* ---------- timeline ---------- */
+  .tl{margin:22px 0 0;padding:0;list-style:none;border-left:2px solid var(--line);margin-left:8px}
+  .tl li{position:relative;padding:0 0 22px 26px;margin:0}
+  .tl li::before{
+    content:"";position:absolute;left:-7px;top:7px;width:12px;height:12px;border-radius:50%;
+    background:var(--accent);border:3px solid var(--bg);
+  }
+  .tl .d{font-family:ui-monospace,Consolas,monospace;font-size:12.5px;color:var(--accent2);font-weight:600}
+  .tl .t{font-weight:600;margin:1px 0 3px}
+  .tl .x{font-size:14px;color:var(--muted)}
+
+  /* ---------- callouts ---------- */
+  .note{border-left:3px solid var(--accent);background:#FFFBF4;padding:13px 18px;border-radius:0 8px 8px 0;margin:16px 0}
+  .note.warn{border-left-color:var(--warn);background:#FFF8EE}
+  .note.bad{border-left-color:var(--bad);background:#FEF6F5}
+  .note.ok{border-left-color:var(--ok);background:#F4FBF7}
+  .note strong{color:#5A3D14}
+  .note p:last-child{margin-bottom:0}
+
+  .two{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+  @media(max-width:760px){.two{grid-template-columns:1fr}}
+
+  footer{
+    margin-top:64px;padding-top:22px;border-top:1px solid var(--line);
+    font-size:13px;color:var(--muted);
+  }
+  .toc{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:20px 24px;margin:0 0 8px}
+  .toc ol{columns:2;column-gap:34px;margin:0;padding-left:20px;font-size:14.2px}
+  @media(max-width:620px){.toc ol{columns:1}}
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <div class="kicker">Project Status Report</div>
+    <h1>Learning Harness 项目报告</h1>
+    <p class="sub">
+      一个面向自学者的开源 AI 学习辅助框架。程序形态是<b>基于 Cordis 插件框架、由宿主 dsh 提供内核机制、
+      由一组 LH 插件编排而成</b>的 Harness。本报告覆盖：定位与理念、程序形态、内核契约、插件名册、
+      已跑通的闭环、数据现状、工程治理体系、决策时间线、已知风险与下一步。
+    </p>
+    <div class="hero-meta">
+      <span>报告日期 2026-09-20</span>
+      <span>仓库 LearningHarnessv0.1</span>
+      <span>宿主 dsh 0.1.1-rc.2</span>
+      <span>阶段：最小闭环跑通</span>
+    </div>
+  </div>
+</header>
+
+<div class="wrap">
+
+  <!-- ============ 摘要 ============ -->
+  <div class="stats">
+    <div class="stat"><b>7</b><span>在运行的 LH 插件</span></div>
+    <div class="stat"><b>9</b><span>模型可调用工具</span></div>
+    <div class="stat"><b>240</b><span>LH 事件日志条数</span></div>
+    <div class="stat"><b>30</b><span>架构决策记录（ADR）</span></div>
+    <div class="stat"><b>8</b><span>自动闸门脚本</span></div>
+    <div class="stat"><b>238</b><span>题库离线断言</span></div>
+  </div>
+
+  <div class="note">
+    <p><strong>一句话结论：</strong>架构与契约层已经冻结并落成可执行约束（30 份 ADR + 16 条实测宿主约束 + 8 道闸门），
+    运行时已经有一条真实闭环在跑——<b>「导入题目 → 题库出题 → 作答判分 → 解析与错题统计 → 事件落盘」</b>。
+    当前瓶颈不在设计，而在两条链路的产能与覆盖：<b>① 学习者建模（四元组证据 / 断言层 / context compiler）尚未运行；② 材料到题库的抽取链还只是"人按记忆跑的手艺"，不是系统能力。</b></p>
+  </div>
+
+  <div class="toc">
+    <ol>
+      <li><a href="#s1">项目定位与理念层</a></li>
+      <li><a href="#s2">程序形态：三方分层与插件编排</a></li>
+      <li><a href="#s3">内核契约（架构宪法）</a></li>
+      <li><a href="#s4">插件名册</a></li>
+      <li><a href="#s5">已跑通的闭环</a></li>
+      <li><a href="#s6">数据与事件现状</a></li>
+      <li><a href="#s7">工程治理体系</a></li>
+      <li><a href="#s8">决策时间线</a></li>
+      <li><a href="#s9">已知风险与缺陷</a></li>
+      <li><a href="#s10">待决清单与下一步</a></li>
+      <li><a href="#appendix">附录：文档与文件地图</a></li>
+    </ol>
+  </div>
+
+  <!-- ============ 1 ============ -->
+  <h2 id="s1"><span class="n">01</span>项目定位与理念层</h2>
+  <p class="lead">理念层与架构层已冻结；实现层进行中。</p>
+
+  <p>LH 要解决 AI 辅助学习的两个核心痛点：</p>
+  <div class="two">
+    <div class="card tight">
+      <h4>① 上下文管理</h4>
+      <p style="font-size:14.2px;margin:0">一次学习短则数周、长则数月。学习产品的上下文观是
+      <b>「一段跨越数月的、有结构的成长史」</b>，而不是「一段对话」。</p>
+    </div>
+    <div class="card tight">
+      <h4>② 因材施教</h4>
+      <p style="font-size:14.2px;margin:0">「材」有双面：<b>作为学生的用户</b>（学习者模型）与
+      <b>用户持有的学习资源</b>（资源模型）。匹配是双向的。</p>
+    </div>
+  </div>
+
+  <h3>明确拒绝的两条路线</h3>
+  <ul>
+    <li><b>百万上下文力大砖飞</b>——成本拒绝广大学习者；且 lost-in-the-middle、注意力稀释意味着质量本身随上下文规模退化。</li>
+    <li><b>硬编码 skills 覆盖教学法</b>——把教学法知识冻进代码，无法生长、无法被懂教学的人编辑。</li>
+  </ul>
+
+  <h3>服务对象与差异化判断</h3>
+  <p>服务对象是<b>初高中之外的广大自学者</b>（备考 / 技能掌握 / 自我提升），目标高度异构。</p>
+  <div class="note">
+    <p><strong>核心判断：</strong>学习者的异构性（目的、资料、方法、节奏）是问题域的<b>本体</b>，
+    因此教学策略本身必须可插拔——这是采用 Harness 架构的根本原因。</p>
+    <p><strong>差异化不在工具，而在编排与约束：</strong>什么时机注入什么信息、允许/禁止模型做什么、记忆怎么沉淀。</p>
+  </div>
+
+  <h3>分层法律（治理模型，共四条）</h3>
+  <table>
+    <thead><tr><th style="width:110px">法律</th><th>内容</th><th style="width:150px">状态</th></tr></thead>
+    <tbody>
+      <tr><td>第一条</td><td>一切皆插件：内核只负责机制，不含任何教学判断与领域逻辑</td><td>已冻结</td></tr>
+      <tr><td>第二条</td><td>事实归内核，解释归插件；派生资源必须带血缘回流</td><td>已冻结</td></tr>
+      <tr><td>第三条</td><td>第 N 层未书面冻结前，禁止讨论第 N+1 层</td><td>有效但已被第四条约束</td></tr>
+      <tr><td><b>第四条（产品法律）</b></td><td><b>任何时刻，必须存在一条用户可感知的完整闭环在运行。允许被冻结的层次，只能是这条闭环已经走过的层次。</b></td><td>ADR-011 新增</td></tr>
+    </tbody>
+  </table>
+  <p style="font-size:14px;color:var(--muted)">第四条法律是项目的一次自我修正：它把「冻结」的度量方式从"文档想清楚"改成"闭环跑通过"，直接推翻了导致项目停滞的旧规则。</p>
+
+  <!-- ============ 2 ============ -->
+  <h2 id="s2"><span class="n">02</span>程序形态：三方分层与插件编排</h2>
+  <p class="lead">宿主 dsh 提供内核机制 → Cordis 提供插件框架 → LH 只产出契约、词汇表与插件。</p>
+
+  <div class="layers">
+    <div class="layer l-host">
+      <span class="role">宿主 · 内核机制</span>
+      <h4>dsh（DeepSeek Harness）0.1.1-rc.2 · MIT · 开发者预览版</h4>
+      <p>提供并视为已冻结：append-only 会话日志（<code>dsh-session</code>）、投影与投影持久化、
+      上下文拦截点 <code>agent/pre-step</code>、系统提示词组装、工具注册与执行管线、插件加载与可逆卸载、撤销回滚。</p>
+    </div>
+    <div class="layer l-cordis">
+      <span class="role">插件框架</span>
+      <h4>Cordis（依赖注入 / 服务定位容器）</h4>
+      <p>服务定位 + 声明式注入（<code>inject</code>）+ 生命周期 + 可逆副作用（<code>ctx.effect</code>）。
+      换来三件事：可替换性（换 LLM 实现不改消费插件）、加载顺序自动解析、<b>测试替身免费</b>。</p>
+    </div>
+    <div class="layer l-lh">
+      <span class="role">LH 层</span>
+      <h4>LH = 事件词汇表 + 插件 + 契约</h4>
+      <p>内核自研已于 ADR-011 终止。LH 的资产是契约（<code>LH内核契约-v0.1.md</code>、
+      <code>PLUGIN_CONTRACT.md</code>）、自持的事件信封（<code>data/events.jsonl</code>）、以及 7 个插件。
+      判据落到文件边界：只有适配层允许 import 宿主包，领域层只 import LH 自己的类型。</p>
+    </div>
+    <div class="layer l-app">
+      <span class="role">用户可感知</span>
+      <h4>刷题面板 + 对话卡片 + LH 配色</h4>
+      <p>客户端半经宿主插槽投放（<code>shell.overlay</code>、<code>tool.call.toolview</code>），
+      配色只在 LH 会话内生效。壳级前端（整体切进 LH 自己的页面）已推迟（ADR-013）。</p>
+    </div>
+  </div>
+
+  <h3>插件编排的两个作用域（决定一切写法）</h3>
+  <table>
+    <thead><tr><th style="width:150px">作用域</th><th>位置与能拿到什么</th><th>成员</th></tr></thead>
+    <tbody>
+      <tr>
+        <td><b>agent preset 作用域</b></td>
+        <td><code>$DSH_HOME/.agent-presets/lh/agent.cordis.yml</code>。能拿到
+        <code>ctx.llm</code> / <code>ctx.systemPrompt</code> / <code>ctx.tools</code> / <code>ctx.sessions</code>；
+        <b>够不着</b> host 面发布的服务（如 <code>webServer</code>）。</td>
+        <td class="mono">event-store<br>recorder-trace<br>resource-indexer<br>model-tier<br>question-bank</td>
+      </tr>
+      <tr>
+        <td><b>profile 作用域</b></td>
+        <td><code>$DSH_HOME/profiles/&lt;名&gt;/</code>。能用 <code>webServer</code> 注册 HTTP 路由，
+        改服务端插件<b>必须重启 dsh</b>。</td>
+        <td class="mono">practice<br>theme</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="note warn">
+    <p><strong>最容易致命的一条：</strong>插件加载失败会让<b>整棵插件树加载失败、dsh 完全无法启动</b>——
+    学习者面对的是一个加载失败的界面，连"该配什么"这句话都看不到。
+    因此纪律是：<b>先证明"不会起不来"，再证明"逻辑对"。顺序不能反。</b></p>
+  </div>
+
+  <h3>宿主约束（16 条实测行为，写下来省得重查）</h3>
+  <p>架构宪章 <code>§0.1</code> 记录了一批"实测行为"而非"公开 API"。其中最具决定性的几条：</p>
+  <table>
+    <thead><tr><th style="width:60px">#</th><th>约束</th><th style="width:220px">后果</th></tr></thead>
+    <tbody>
+      <tr><td>1</td><td>宿主会话日志的词汇表对外部插件<b>封闭</b>——写自定义事件类型会让会话重载失败</td><td>LH 事件必须自持</td></tr>
+      <tr><td>6</td><td>preset 行未激活会让该 preset 的<b>所有会话都不可用</b>（不只是插件不工作）</td><td>加行是高危编辑动作</td></tr>
+      <tr><td>9</td><td>环境变量必须<b>惰性求值</b>；写成模块级常量会在 import 时固化</td><td>曾导致离线测试把假数据写进真实学习史</td></tr>
+      <tr><td>11</td><td>客户端插件的 <code>inject</code> 必须<b>导出在模块里</b>（服务名数组），package.json 里那份只进 boot manifest</td><td>漏了会在浏览器启动屏报错</td></tr>
+      <tr><td>13</td><td>pnpm 对 <code>file:</code> 目录依赖是<b>拷贝快照不是软链</b>，且目录名由包名派生</td><td>相对路径跨插件引用必然断</td></tr>
+      <tr><td>15</td><td>profile 插件的 <code>apply()</code> 抛错 = dsh 起不来</td><td>装载期不许抛错，配置缺失改成"用的时候拒绝"</td></tr>
+      <tr><td>16</td><td>profile 副本上方<b>没有 LH 仓库</b></td><td>路径靠安装期配置 <code>lh-install.json</code>，不靠"往上找"</td></tr>
+    </tbody>
+  </table>
+
+  <!-- ============ 3 ============ -->
+  <h2 id="s3"><span class="n">03</span>内核契约（架构宪法要点）</h2>
+  <p class="lead"><code>LH内核契约-v0.1.md</code> 定位：内核语法 + 不变量 + 验证方法。一切需要"判断"的事物不归它管——它们属于插件。</p>
+
+  <h3>总原则</h3>
+  <ul>
+    <li><b>内核拥有语法，插件拥有判断。</b>试金石：它做的是格式约定还是内容裁决？</li>
+    <li><b>事件溯源为基座。</b>append-only 事件日志是唯一事实源；一切状态是日志的投影。</li>
+    <li><b>写细读粗。</b>写入端往细记（"没记"不可逆），读取端由投影定义粗粒度。</li>
+    <li><b>内核连「什么值得记」都不知道。</b>记录器是插件；发行版有立场，内核保持无知。</li>
+  </ul>
+
+  <h3>内核五概念（其余皆是插件）</h3>
+  <table>
+    <thead><tr><th style="width:132px">概念</th><th>一句话</th></tr></thead>
+    <tbody>
+      <tr><td><b>节点（课程树）</b></td><td>课程节点 = 作用域 + 自己的事件日志 + 自己的 agent + 自己的建模插件 + 自己的策略集；节点间只有父子关系。深度纪律：先冻结三层（元课程 / 课程 / 会话）。</td></tr>
+      <tr><td><b>事件</b></td><td>统一信封：<code>id</code> / <code>timestamp</code> / <code>schema_version</code> / <code>actor</code> / <code>type</code> / <code>provenance</code> / <code>session_ref</code> / <code>scope</code> / <code>content_ref</code>。演进纪律：<b>只做加法</b>。</td></tr>
+      <tr><td><b>投影</b></td><td>投影是插件；原始的可重放，派生的可重算。抽象梯子 L0 操作 → L1 交互 → L2 证据 → L3 断言 → L4 决策。</td></tr>
+      <tr><td><b>Handoff</b></td><td>一等事件 <code>HandoffInitiated</code>：父节点 agent → 子节点 agent，带交接上下文包。<b>导师递条子，不代课。</b></td></tr>
+      <tr><td><b>Agent 注册表</b></td><td>区分持久 agent（有身份、有事件流）与一次性 function call（无身份）。默认任何插件只能读自己作用域的事件。</td></tr>
+    </tbody>
+  </table>
+
+  <h3>三个承重的领域设计</h3>
+  <div class="card">
+    <h4>用户侧四元组：answer / ask / interpret / explain</h4>
+    <p>全部是<b>生成性行为</b>（generative acts）——测量的是生产而非暴露，理论支撑来自 self-explanation effect、
+    generation effect、learning by teaching 与 ICAP 框架。证据强度阶梯：<b>explain &gt; interpret &gt; ask &gt; answer</b>。
+    进度条 / 清单测量暴露，落于最低级。</p>
+    <p style="margin-bottom:0"><b>反奖惩立场：</b>生成行为停滞时<b>把数据显示给用户</b>（显化），而非扣分——因为奖惩挂生成行为会触发 Goodhart 定律且可被 AI 代写作弊。</p>
+  </div>
+  <div class="card">
+    <h4>L3 断言层：不做确定性画像</h4>
+    <p>不做「掌握度 72%」，做<b>带出处和置信度的断言集</b>：</p>
+    <p style="font-family:ui-monospace,Consolas,monospace;font-size:13.5px;background:var(--code);border:1px solid var(--line);border-radius:6px;padding:11px 14px">
+      「系统认为用户在极限计算上薄弱；依据：事件 #341、#389；置信度：中。」
+    </p>
+    <p style="margin-bottom:0">两个性质：<b>可审计</b>（每条判断回溯到证据）、<b>可争议</b>（用户反驳本身是极高质量的学习事件）。
+    信息沿树向上流动，且只以 L3 断言形式流动；原始事件永不跨作用域。</p>
+  </div>
+  <div class="card">
+    <h4>L4 策略层：策略作为数据，教学动作强制携带预测</h4>
+    <p>策略 = 声明式片段（自然语言描述 + 适用条件 + 约束 + 预期产出），由模型在运行时解释执行。
+    懂教学不懂代码的人可编辑策略；坏策略被数据淘汰。</p>
+    <p style="margin-bottom:0">每个教学动作事件<b>必须</b>携带：目标断言、预期证据、时间窗。
+    策略评估 = 假设检验：动作是干预，学习者模型是测量仪器，后续事件流是观测数据。
+    <b>测量仪器质量是策略评估的天花板。</b></p>
+  </div>
+
+  <h3>验证方法：把架构从一张图变成一组会自动报警的断言</h3>
+  <p><b>八条不变量（每条配可执行检查）</b>——含"两次重放结果一致""上下文组装不得超预算（超预算走降级，不得截断）""每个教学动作携带预测字段""插件只能追加，不得直写投影""资料删除后派生状态无痕迹""原始事件不跨作用域""全部历史事件在新 schema 下仍可重放""事件永不迁移节点"。</p>
+  <p><b>五个黄金场景（端到端）</b>——中断回归（中断 18 天后"我们继续吧"）、跨课程调度（handoff）、资料生命周期、分类器升级重放、用户争议断言。</p>
+
+  <!-- ============ 4 ============ -->
+  <h2 id="s4"><span class="n">04</span>插件名册</h2>
+  <p class="lead">每个插件的 <code>package.json</code> 都带一段可机械枚举的 <code>lh</code> 自我描述（ADR-024 决定 3）——读包比读文档可靠，文档会忘更新。</p>
+
+  <table>
+    <thead>
+      <tr><th>包名</th><th style="width:92px">类别</th><th style="width:70px">加载层</th><th>提供的能力</th><th style="width:96px">验证</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td class="mono">@lh/event-store</td>
+        <td><span class="badge k-kernel">kernel</span></td>
+        <td class="mono">preset</td>
+        <td>LH 自己的 append-only 事件日志与服务 <code>ctx.lhEvents</code>；统一提供数据目录 / 工作区定位（<code>paths.js</code>，<b>不许写死盘符</b>）；投影 <code>lhEvents</code></td>
+        <td><span class="tag-yes">闸门 ✓ 实测 ✓</span></td>
+      </tr>
+      <tr>
+        <td class="mono">@lh/recorder-trace</td>
+        <td><span class="badge k-recorder">recorder</span></td>
+        <td class="mono">preset</td>
+        <td>把宿主会话日志里的语义事件以 <code>(sessionId, seq)</code> 坐标索引进 LH 日志；<b>只记坐标不抄内容</b>（ADR-014）；只记学习会话</td>
+        <td><span class="tag-yes">闸门 ✓ 实测 ✓</span></td>
+      </tr>
+      <tr>
+        <td class="mono">@lh/resource-indexer</td>
+        <td><span class="badge k-capability">capability</span></td>
+        <td class="mono">preset</td>
+        <td>扫描资料夹 → 索引文档写进工作区 <code>lh-index/</code> → 记一条 LH 资源；重复索引建 <code>supersedes</code> 取代链；工具 <code>index_learning_resources</code>。只做机械转换，不判断"这是不是学习资料"</td>
+        <td><span class="tag-yes">闸门 ✓ 实测 ✓</span></td>
+      </tr>
+      <tr>
+        <td class="mono">@lh/model-tier</td>
+        <td><span class="badge k-capability">capability</span></td>
+        <td class="mono">preset</td>
+        <td>档位→模型候选链解析（三种降级已测）；真实调用失败才降级、降级事实作为数据返回；<b>绝不阻断、绝不弹框、绝不改宿主 adaptor</b>；档位可用性注入运行时上下文 <code>lh:model-tiers</code></td>
+        <td><span class="tag-yes">闸门 ✓ 实测 ✓</span></td>
+      </tr>
+      <tr>
+        <td class="mono">@lh/question-bank</td>
+        <td><span class="badge k-capability">capability</span></td>
+        <td class="mono">preset</td>
+        <td><b>8 个工具</b>：<code>import_questions</code> / <code>record_attempt</code> / <code>list_question_banks</code> / <code>get_questions</code>（不含答案）/ <code>submit_answer</code>（记录+判分+解析合一，结构上不可绕过）/ <code>get_solution</code> / <code>get_practice_stats</code>（含错题本）/ <code>start_practice</code>；两轴封闭知识点词表；运行时上下文 <code>lh:practice-routing</code></td>
+        <td><span class="tag-yes">闸门 ✓ 实测 ✓</span></td>
+      </tr>
+      <tr>
+        <td class="mono">@lh/practice</td>
+        <td><span class="badge k-ui">ui</span></td>
+        <td class="mono">profile</td>
+        <td>服务端半注册 3 条数据路由（<code>/lh/practice/bank</code>、<code>/attempt</code>、<code>/pending</code>）；客户端半在 <code>shell.overlay</code> 渲染可拖动缩放的刷题面板，并在对话里放一张入口卡片</td>
+        <td><span class="tag-yes">闸门 ✓ 实测 ✓</span></td>
+      </tr>
+      <tr>
+        <td class="mono">@lh/theme</td>
+        <td><span class="badge k-ui">ui</span></td>
+        <td class="mono">profile</td>
+        <td>配色套壳：只重定义宿主的颜色变量（浅色 = 奶油米 + 橙，深色 = 黑蓝），不碰任何组件样式；仅当前会话跑在 LH preset 上时生效</td>
+        <td><span class="tag-yes">闸门 ✓ 实测 ✓</span></td>
+      </tr>
+    </tbody>
+  </table>
+
+  <p style="font-size:14px;color:var(--muted)">
+    <b>已退役</b>：<span class="badge k-retired">lh-hello</span> 提示词注入探针 ·
+    <span class="badge k-retired">@lh/ui</span> 界面链路探针 ·
+    <span class="badge k-retired">lh-llm-probe</span> 模型调用探针。
+    验证职责已分别由 event-store 的 trace、theme 的持续生效、model-tier 的自检接替。
+  </p>
+
+  <h3>尚未运行的插件（不要当成已有）</h3>
+  <p>四元组分类器 · 学习者模型（断言层）· context compiler 的真实注入内容 · 策略层 · 资源分类器 ·
+  题目抽取（agent 调不到）· 点击式作答 · 壳级前端 · <code>lh-plugin-develop</code> / <code>lh-devkit</code> / <code>lh-install</code>。</p>
+
+  <!-- ============ 5 ============ -->
+  <h2 id="s5"><span class="n">05</span>已跑通的闭环</h2>
+  <p class="lead">按"只数能跑通的东西，不数文档"的口径（WORKFLOW §5）。</p>
+
+  <table>
+    <thead><tr><th style="width:180px">部件</th><th>已验证的行为</th></tr></thead>
+    <tbody>
+      <tr><td>挂载点</td><td>宿主能发现、组合、挂载 agent preset（<code>$DSH_HOME/.agent-presets/lh/</code>）；插件源码住在工作区，依赖可解析</td></tr>
+      <tr><td>事件日志</td><td>LH 自己的 append-only 日志（<code>data/events.jsonl</code>）在写，信封符合契约，投影 <code>lhEvents</code> 已注册</td></tr>
+      <tr><td>记录器</td><td>订阅宿主会话事件流，语义事件以坐标进 LH 日志；<b>已实测挡住开发会话</b>，只记学习会话</td></tr>
+      <tr><td>资源索引</td><td>实测 230 文件 / 5.16 GB / <b>15 ms</b> 扫完；产出索引文档 + 资源事件（<code>content_ref</code> 指向该文件）</td></tr>
+      <tr><td>模型档位</td><td>档位→模型候选链解析（三种降级已测）；对两个 provider 各发过真实调用并收到回复</td></tr>
+      <tr><td>题库与刷题</td><td>8 个工具齐全；<code>get_questions</code> <b>不泄答案</b>；<code>submit_answer</code> 记录+判分+解析合一、结构上不可绕过；错题本可查；<b>238 项离线断言全过</b>（61+111+20+46）</td></tr>
+      <tr><td>刷题界面</td><td>卡片入口 + 可拖动面板；作答经 HTTP 路由写进事件日志；面板按卡片上选择词汇的"信号"取题</td></tr>
+      <tr><td>外观</td><td>配色在 LH 会话内生效，dsh 会话保持原样；两套外观在 CSS 层面互斥，不依赖注入顺序</td></tr>
+    </tbody>
+  </table>
+
+  <div class="note ok">
+    <p><strong>端到端跑通的一条完整链（2026-09-20）：</strong>
+    题本切题（模型，40 题 / 2 套）→ 解析侧阅读顺序重排（确定性脚本，不花 token，对齐 41/41 全对）
+    → 答案抽取（规则，41/41 有答案）→ 合并入库（<b>39/40 入库</b>，出处 39/39 回填）
+    → 交叉验证（一致 <b>30/39 = 77%</b>，9 条不一致逐条列出）
+    → 经插件自己的取题 / 判分接口验证：取题不泄答案、判分三态正常、作答写进事件日志。</p>
+  </div>
+
+  <!-- ============ 6 ============ -->
+  <h2 id="s6"><span class="n">06</span>数据与事件现状</h2>
+  <p class="lead">以下都是实测数字，不是设计目标。</p>
+
+  <h3>事件日志（<code>data/events.jsonl</code>）</h3>
+  <table>
+    <thead><tr><th style="width:250px">事件类型</th><th style="width:110px">条数</th><th>含义</th></tr></thead>
+    <tbody>
+      <tr><td class="mono">lh/trace/observed</td><td>218</td><td>宿主会话语义事件的坐标索引（记录器产出）</td></tr>
+      <tr><td class="mono">lh/user/attempt</td><td>18</td><td>用户作答（学习者行为，目前唯一的真实学习事件）</td></tr>
+      <tr><td class="mono">lh/resource/indexed</td><td>4</td><td>资源索引产出</td></tr>
+      <tr><td><b>合计</b></td><td><b>240</b></td><td>自 2026-09-16 起，actor 分布：agent 222 / human 18</td></tr>
+    </tbody>
+  </table>
+  <p style="font-size:14px;color:var(--muted)">词汇表目前只有 3 个类型——四元组分类事件、断言事件、策略事件、handoff 事件都还没有生产者。</p>
+
+  <h3>题库数据（必须知道的三处缺陷）</h3>
+  <div class="note bad">
+    <p>工作区那份 49 题题库（<code>考公刷题-片段阅读与逻辑判断.json</code>）是<b>两份资料合并</b>的
+    （片段阅读 20 题 + 逻辑判断 29 题），两份题号都从 <code>set1-q1</code> 开始，<b>跨资料会撞车</b>。另有三个具体缺陷（都还没修）：</p>
+    <ol style="margin-bottom:0">
+      <li>它<b>从未经过 <code>import_questions</code></b>，所以事件流里没有它的 <code>lh/resource/questions-imported</code>；</li>
+      <li>它的 provenance 指向 <code>@lh/extractor</code> —— <b>这个插件不存在</b>（是脚本直接落盘时写下的）；</li>
+      <li>它的 <code>topics</code> 只有 <b>13/49</b> 道有值（试点产物缺文件出处，只能保守匹配）。</li>
+    </ol>
+  </div>
+  <p>第 3 条背后是一次代价很高的教训（ADR-021 结论八）：<b>产物没有稳定标识，等于没产出。</b>
+  试点产物只记 <code>set1-q1</code> 这种"资料内编号"，没有文件名、没有题干，于是按题号匹配会把片段阅读的知识点写到逻辑判断的题上——
+  <b>不报错、只是全错，而且事后无法从产物里发现。</b>最终 49 道只有 13 道能安全写入，其余如实留在报告里。</p>
+
+  <h3>抽取链的成本实测（决定"2400 题入库"能否立项）</h3>
+  <table>
+    <thead><tr><th>环节</th><th style="width:150px">实测</th><th>四科 2400 题推算</th></tr></thead>
+    <tbody>
+      <tr><td>题本切题（模型）</td><td>40 题：56k tokens / 墙钟 323s / 峰值内存 62 MB</td><td>~130 窗 / ~1.0M tokens / ~1 小时</td></tr>
+      <tr><td>解析侧（规则）</td><td>31 页重排，30 页文本改变，41/41 对齐全对</td><td>~145 窗 / ~1.0M tokens / ~1 小时</td></tr>
+      <tr><td>OCR（2028 页，串行 1.5s/页）</td><td>—</td><td>~52 分钟</td></tr>
+      <tr><td><b>合计</b></td><td>—</td><td><b>~275 窗 / ~2M tokens / ~3 小时</b>（每 600 题约 45–60 分钟、0.5M tokens）</td></tr>
+    </tbody>
+  </table>
+
+  <!-- ============ 7 ============ -->
+  <h2 id="s7"><span class="n">07</span>工程治理体系</h2>
+  <p class="lead">这套东西是项目最独特的部分：它把"开发过程本身"也当成要被建模的对象。</p>
+
+  <h3>三类记录，各司其职</h3>
+  <table>
+    <thead><tr><th style="width:170px">载体</th><th style="width:210px">回答什么</th><th>形态与数量</th></tr></thead>
+    <tbody>
+      <tr><td><code>docs/decisions/</code></td><td>决定了什么、为什么、错了会怎样</td><td>ADR，一条决定一份，<b>30 份</b>（001–030）</td></tr>
+      <tr><td><code>docs/experience/</code></td><td>学到了什么、怎么学到的</td><td>按「角色 / 日期」分文件，<b>12 份</b>（默认不记，滥记会稀释价值）</td></tr>
+      <tr><td><code>docs/WORKFLOW.md</code></td><td>开发过程本身该怎么约束</td><td>当前 v0.4，随实践修订（v0.1→v0.4 共 4 版，都因实践失效而改）</td></tr>
+    </tbody>
+  </table>
+
+  <h3>ADR 六项必填（验收标准：陌生读者或另一个模型能重建出合理解释）</h3>
+  <ol>
+    <li>决定了什么（一句话，可执行）</li>
+    <li>当时有哪些别的选择（至少两个，包括"什么都不做"）</li>
+    <li>为什么排除别的（真实理由，不是事后合理化）</li>
+    <li>依赖什么前提 / 假设（前提塌了，决策就要重审）</li>
+    <li><b>怎么知道它错了</b>（可观察的信号）—— 最容易省也最重要：没有失效信号的决策不是决策，是信念</li>
+    <li>证据在哪（文件路径、代码行、命令输出、外部链接）</li>
+  </ol>
+
+  <h3>WORKFLOW v0.4：人做判断，AI 做其余</h3>
+  <ul>
+    <li>人的提问权<b>没有上限</b>；AI 不得因为"这会增加认知负担"而不回答。</li>
+    <li>一个工作单位最多一个目标；一次交付不超过 <b>3 个待回应项</b>（选项必须带后果与推荐，说不清后果就别端出来）。</li>
+    <li>分段依据是<b>任务的客观难度</b>，不是墙钟时间或对话轮数；可观察但不设时间上限。</li>
+    <li><b>破坏性操作一律白名单</b>——只允许"明确列出要删的东西"，不允许"删掉所有不匹配的"。</li>
+    <li><b>不阻塞记录</b>：未决是禁止状态，"临时答案"是合法状态。</li>
+  </ul>
+
+  <h3>协作者模型：把"AI 对这个人的感知"写成可反驳的断言</h3>
+  <p>WORKFLOW §6 与内核契约 §4.1 是同一套规矩的自我应用——<b>LH 的学习者模型该怎么长，先在作者身上长一遍。</b>
+  <code>COLLABORATOR_MODEL.md</code> 现有 A1–A9（能力与状态）、B1–B18（协作偏好）、C1–C22（AI 自己的错误，必须留痕供核对可靠性）、
+  D1–D7（低置信度猜测）、E1–E18（行为准则）。每条带出处、置信度、可推翻条件。</p>
+  <div class="note">
+    <p><strong>其中一条被反复验证、也最能说明项目气质：</strong>作者的纠正系统性地指向同一个问题——
+    <b>「这个决定该由谁拥有？」</b>AI 的默认倾向是"系统替用户做安全选择"（工程习惯），
+    作者的默认倾向是"<b>把选择权和后果交给用户，系统负责把后果说清楚</b>"。
+    这与内核契约 §3.1 的反奖惩立场是同一个原则——<b>他的工程判断与他的教学理念是同源的。</b></p>
+  </div>
+
+  <h3>八道自动闸门（+ 各自的自检）</h3>
+  <table>
+    <thead><tr><th style="width:270px">脚本</th><th>拦什么</th><th>关键设计</th></tr></thead>
+    <tbody>
+      <tr><td class="mono">check-plugin-imports.mjs</td><td>安装后的包能否被 import</td><td>import 的是 profile 里的<b>副本</b> → 走生产路径</td></tr>
+      <tr><td class="mono">check-profile-apply.mjs</td><td>插件的 apply() 会不会抛错</td><td>记账式假 ctx 真跑一遍</td></tr>
+      <tr><td class="mono">check-client-inject.mjs</td><td>客户端 bundle 的 ctx.&lt;服务&gt; 是否都声明了</td><td>手写状态机剥注释与字符串（正则会把注释误判）</td></tr>
+      <tr><td class="mono">check-preset-mount.mjs</td><td>preset 行能否加载、工具 schema 是否合规</td><td>用宿主的 <code>assertSupportedJsonSchema</code></td></tr>
+      <tr><td class="mono">check-installed-copies.mjs</td><td><b>副本是不是旧的</b>（"测过了"是不是真的）</td><td>按 <code>files</code> 比对，<b>拒绝自动推断</b></td></tr>
+      <tr><td class="mono">check-paths-resolution.mjs</td><td>同一问题从每个加载位置问，答案一不一样</td><td>子进程 + 干净环境；<b>答案不一致比答案错更难发现</b></td></tr>
+      <tr><td class="mono">check-hardcoded-paths.mjs</td><td>写死的盘符</td><td>例外要带理由，且一处一个</td></tr>
+      <tr><td class="mono">check-plugin-contract.mjs</td><td>声明（<code>lh</code> 字段）与实现是否一致</td><td>ADR-024 自我描述的可验证化</td></tr>
+    </tbody>
+  </table>
+
+  <div class="note warn">
+    <p><strong>闸门的边界（必须知道，否则会变成假的安全感）：</strong>
+    它们证明的是"能 import / apply 不抛错 / 声明齐全 / 副本是新的 / 路径一致"，
+    <b>不能证明宿主真的会这样调度，也不能证明逻辑对。最终仍需要一次真启动。</b></p>
+    <p style="margin-bottom:0"><strong>而且：闸门自己要先对着"已知坏的状态"红一次，才算被验证过。</strong>
+    已有一条反直觉推论被写进契约：把"装载期抛错"改成"用的时候拒绝"会让某道闸门<b>变绿而底层仍然是坏的</b>——
+    所以改掉一个错误行为时，要同时问"原来是谁在替我报警"，并把这个警报器补回来。</p>
+  </div>
+
+  <!-- ============ 8 ============ -->
+  <h2 id="s8"><span class="n">08</span>决策时间线</h2>
+  <p class="lead">11 次提交 / 30 份 ADR，六个开发日的密度。</p>
+
+  <ul class="tl">
+    <li>
+      <div class="d">2026-09-15</div>
+      <div class="t">宿主转向：内核自研终止（ADR-011）</div>
+      <div class="x">原路线（先写内核 loop/registry/context）的实践结果是"内核被写出来了，但没有任何面向学习者的可用功能，而 ADR 累积到十份"。
+      根因是第三条法律让"未完成"成为稳定状态——<b>不是能力问题，是度量方式问题</b>。
+      决定：内核机制采用宿主 dsh；LH 资产是词汇表 + 插件 + 契约；新增<b>第四条产品法律</b>；第一个用户是作者本人。
+      同日建立协作者模型与反馈机制。</div>
+    </li>
+    <li>
+      <div class="d">2026-09-16</div>
+      <div class="t">外观边界与模型档位</div>
+      <div class="x">ADR-013：壳级前端推迟，采用"只在 LH 会话内改外观"作为临时边界；客户端扩展一律走宿主正式接口，不用固定定位之类的旁门。
+      ADR-016：档位建议而非要求——风险告知即可，不该让 agent 一直拒绝服务。ADR-012：LH 事件日志形态与信封起步字段。</div>
+    </li>
+    <li>
+      <div class="d">2026-09-17</div>
+      <div class="t">题库的对象与接口（ADR-017 / 018 / 019 / 020 / 021）</div>
+      <div class="x">作者给的是一条<b>顺序</b>而不只是目标："先搭起来行为的对象和接口再去对行为分类"。
+      确立了"题目是资源、作答是事件"；题解带来源；<b>LLM 的答案绝不进判分路径</b>（红线）；
+      "入库前的 LLM 预处理"——不把 LLM 当分块器，而当成预处理与独立第二意见。</div>
+    </li>
+    <li>
+      <div class="d">2026-09-18</div>
+      <div class="t">四次"dsh 起不来"与随之而来的治理升级</div>
+      <div class="x">连续四次宿主完全无法启动（相对路径跨层引用、客户端 inject 未导出、list 插槽缺 id、dev 环境非隔离）。
+      作者的反应不是"别再动了"，而是提出 <code>lh-plugin-develop</code> 要管这类问题、并提出"克隆一个 dsh 做开发/测试隔离"。
+      同日产出 ADR-023（版本控制范围 + <b>启动包装器</b>代替哨兵插件——"一个和病人绑在一起的心脏除颤器，在病人心脏停跳时也一起停了"）、
+      ADR-024（部署流程 + 每插件一份机器可读自我描述）、ADR-025（<b>装载期不许抛错</b>）、ADR-026（外观由 agent 声明意图）。</div>
+    </li>
+    <li>
+      <div class="d">2026-09-19</div>
+      <div class="t">刷题循环闭环 + 知识点词表 + 视频证据源</div>
+      <div class="x">刷题循环落地（ADR-019/022）：卡片入口、面板取题、"刷题走哪条路"的运行时上下文（order 117）。
+      知识点两轴封闭词表落地（题型 17 项 + 领域 5 项，认不出的标签如实回报为 <code>unmapped_topics</code>）。
+      ADR-027：视频是<b>有时间索引的证据源</b>，不是一段待总结的素材——一期只做元数据/标签/字幕/评论，视觉与 ASR 推迟且须先证明"不用它也能用"。</div>
+    </li>
+    <li>
+      <div class="d">2026-09-20</div>
+      <div class="t">抽取链两侧分工 + LH 会话带上基础能力</div>
+      <div class="x">ADR-028：题目 id 全局唯一（<code>练习题01-q1</code>），根治跨资料撞车。
+      <b>ADR-029</b>：题本归模型（读 + 改错 + 独立作答），解析归规则（答案印在纸上，规则抽得准、可复现、零成本），
+      模型作答只作交叉验证——实测证明它是当前<b>唯一</b>能抓到"答案块错位"的仪器。
+      <b>ADR-030</b>：LH 会话带上 standard preset 的基础能力，<b>分两批</b>——第一批 8 行（shell / 文件 / 搜索 / web 等，不需 isolate realm）已落地待真会话验证；
+      第二批（planning / compaction / delegation）需 isolate realm，因失败面不同而刻意分开，未做。</div>
+    </li>
+  </ul>
+
+  <!-- ============ 9 ============ -->
+  <h2 id="s9"><span class="n">09</span>已知风险与缺陷</h2>
+  <p class="lead">如实记下，不粉饰——这是项目自己的纪律（"没验证的写未验证，不要写成规则"）。</p>
+
+  <table>
+    <thead><tr><th style="width:150px">类别</th><th>内容</th></tr></thead>
+    <tbody>
+      <tr><td><b>宿主依赖风险</b></td><td>dsh 是开发者预览版，README 明确将有破坏性变更，已有移除 SQLite 后端的先例。LH 的插件大量依赖 <b>16 条"实测行为"而非公开 API</b>；锁定 npm 版本防不了"升级时没意识到某条实测行为没了"。</td></tr>
+      <tr><td><b>题库数据缺陷</b></td><td>工作区那份 49 题从未经过 <code>import_questions</code>；provenance 指向不存在的 <code>@lh/extractor</code>；<code>topics</code> 只有 13/49 有值；两份资料题号撞车（已由 ADR-028 定下修法，未实施）。</td></tr>
+      <tr><td><b>界面作答缺坐标</b></td><td><code>lh/user/attempt</code> 的 <code>session_ref</code> 与 <code>context.seq</code> 都是 <code>null</code>——HTTP 路由没有会话上下文。日志里有"谁、何时、答了哪道题、对错如何"，但<b>没有</b>"这次作答属于哪场对话"。临时答案：显式留空，不编坐标。</td></tr>
+      <tr><td><b>产品立场待决</b></td><td>第一批基础能力把 shell 交给了 LH 会话。<b>"给学习者会话一个 shell"在别处是否可接受是一个产品决策</b>——本 ADR 记的是"在这一步上选了要"，不是"这件事永远对"。且能力给了之后，如何隐藏 dsh 的开发表达方式尚未解决（归 <code>lh-plugin-development</code>）。</td></tr>
+      <tr><td><b>手艺 vs 系统能力</b></td><td>抽取链（survey → pair → OCR → 旋转 → 对齐 → 抽答案 → 分块入库）<b>只有脚本，agent 调不到</b>，只能由人按记忆依次执行。这是当前主线要解决的问题。</td></tr>
+      <tr><td><b>词表扩张无纪律</b></td><td>两轴封闭词表已落地，但"加词"的判据与流程未定：新词必须在真实题目里出现过（<code>unmapped_topics</code> 就是它的来源清单）；谁有权加词、加了之后历史断言怎么处理，未决。</td></tr>
+      <tr><td><b>学习者建模空白</b></td><td>四元组分类、断言层、context compiler 的真实注入内容、策略层——<b>全部尚未运行</b>。这是项目的技术护城河所在，也是当前最大的"零"。</td></tr>
+    </tbody>
+  </table>
+
+  <!-- ============ 10 ============ -->
+  <h2 id="s10"><span class="n">10</span>待决清单与下一步</h2>
+
+  <h3>开放问题清单（上限 10 条，新窗口只允许从此取题）</h3>
+  <ol>
+    <li>测评工具（出题 / 诊断）的证据格式——仪器质量是全部评估插件的天花板</li>
+    <li>Claim 置信度的更新协议（多次证据如何结算）</li>
+    <li>跨会话调度器接口（间隔重复、复习时机）</li>
+    <li>记忆文件的写入权限（哪些工具 / 插件可以写学习者模型）</li>
+    <li>开发工作流的认知负担（已有 WORKFLOW.md 应对）</li>
+    <li>界面来的作答缺会话坐标（临时答案：显式留空）</li>
+    <li>知识点词表的扩张纪律</li>
+  </ol>
+  <p style="font-size:14px;color:var(--muted)"><b>不阻塞规则：</b>清单中的任何问题都不得成为动工的前提。遇到未决问题时，选择最幼稚的可用答案继续推进，并把答案记为"临时"。
+  <b>未决是禁止状态，"临时答案"是合法状态。</b></p>
+
+  <h3>下一步（按当前优先级）</h3>
+  <table>
+    <thead><tr><th style="width:56px">序</th><th>事项</th><th>验收 / 状态</th></tr></thead>
+    <tbody>
+      <tr><td>1</td><td><b>验证 ADR-030 第一批</b>：重启 dsh，开一个 LH 会话，让它列一下可用工具</td><td>期望出现 pwsh / read / write / edit / glob / grep / web_search 等（而不是只有 9 个）；失败即按备份回滚</td></tr>
+      <tr><td>2</td><td><b>2400 题入库</b>（四个 600 题）</td><td>每做 600 题停下来等确认；每批约 45–60 分钟、约 0.5M tokens</td></tr>
+      <tr><td>3</td><td><b>把抽取链变成系统能力</b></td><td>目标：从"我会跑的手艺"变成 agent 能调的工具链；并让题库经 <code>import_questions</code> 正式入库（补上缺失的导入事件与正确的 provenance）</td></tr>
+      <tr><td>4</td><td><b>ADR-030 第二批</b>：planning / compaction / delegation</td><td>需 isolate realm；失败面与第一批不同，故分开验证</td></tr>
+      <tr><td>5</td><td><b>修 <code>session_ref</code> 缺失</b></td><td>让界面把会话身份带进请求，或等宿主提供"当前活动会话"服务（尚未实测）</td></tr>
+      <tr><td>6</td><td><b>学习者建模启动</b>：四元组分类器 → 断言层 → context compiler</td><td>核心护城河模块；建议先在作者本人身上跑通（"连续自用两周后判断断言是否准确、是否可反驳"）</td></tr>
+      <tr><td>7</td><td><b>开发类插件</b>：<code>lh-devkit</code> / <code>lh-plugin-develop</code> / <code>lh-install</code></td><td>把 8 道闸门变成 agent 能自己调的工具；部署流程要求"先验证再写入、失败可回滚、幂等、改 <code>~/.dsh</code> 需显式同意"</td></tr>
+    </tbody>
+  </table>
+
+  <!-- ============ 附录 ============ -->
+  <h2 id="appendix"><span class="n">附</span>文档与文件地图</h2>
+  <table>
+    <thead><tr><th style="width:290px">路径</th><th>内容</th></tr></thead>
+    <tbody>
+      <tr><td class="mono">LH内核契约-v0.1.md</td><td>架构宪法：内核五概念、不变量、验证方法、"重复造轮子"审查</td></tr>
+      <tr><td class="mono">docs/ARCHITECTURE.md</td><td>架构宪章 + <b>§0.1 当前在运行的东西</b>（事实清单）+ 16 条宿主约束</td></tr>
+      <tr><td class="mono">docs/PLUGIN_CONTRACT.md</td><td>写插件与 review 插件的唯一权威依据；每条规则标来源（实测 / 宿主源码 / 闸门）</td></tr>
+      <tr><td class="mono">docs/WORKFLOW.md</td><td>开发工作流 v0.4：人的提问权、3 项上限、破坏性操作白名单、不阻塞记录</td></tr>
+      <tr><td class="mono">docs/COLLABORATOR_MODEL.md</td><td>协作者模型 A/B/C/D/E 五天更新记录</td></tr>
+      <tr><td class="mono">docs/decisions/001–030</td><td>30 份 ADR，每份六项必填</td></tr>
+      <tr><td class="mono">docs/experience/&lt;角色&gt;/&lt;日期-主题&gt;.md</td><td>12 份经验记录，五维模板（场景 / 决策 / 根因 / 解决方案 / 启示）</td></tr>
+      <tr><td class="mono">plugins/lh-*/</td><td>7 个插件，每个含 <code>package.json</code>（带 <code>lh</code> 自我描述）与 <code>files</code> 清单</td></tr>
+      <tr><td class="mono">scripts/check-*.mjs</td><td>8 道闸门 + 各自的自检脚本（闸门必须先对着已知坏的状态红过一次）</td></tr>
+      <tr><td class="mono">scripts/*.py · *.mjs</td><td>抽取链脚本（OCR / 旋转 / 阅读顺序 / 答案抽取 / 分题 / 合并入库）——<b>尚未变成插件</b></td></tr>
+      <tr><td class="mono">data/events.jsonl</td><td>LH 的 append-only 事件日志（唯一事实源，240 条）</td></tr>
+      <tr><td class="mono">lh-install.json</td><td>安装期配置：装的时候写下、运行时只读（仓库根一份 + 每个 profile 一份）</td></tr>
+    </tbody>
+  </table>
+
+  <footer>
+    <p>本报告由工作区现有文件与数据实测汇总而成，未引入外部信息；所有数字均可在上述路径复核。</p>
+    <p>报告日期 2026-09-20 · Learning Harness v0.1</p>
+  </footer>
+
+</div>
+</body>
+</html>

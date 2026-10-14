@@ -1,0 +1,76 @@
+{
+  "name": "@lh/schedule",
+  "version": "0.1.0",
+  "private": true,
+  "description": "LH 的学习日程：日程 = lh/schedule/* 事件的投影（唯一实现 schedule.js），写入只有一条路径（commands.js），日历视图把「计划 / 事实（lh/trace/observed）/ 课程安排（lh/course/*）」按日期索引到一张表上（calendar.js）。注册 create_schedule / list_schedule / update_schedule / cancel_schedule 四个工具，并把「今天有哪些日程、欠了什么」注入运行时上下文 lh:agenda（order 118）。",
+  "type": "module",
+  "main": "index.js",
+  "exports": {
+    ".": {
+      "default": "./index.js"
+    },
+    "./schedule": {
+      "default": "./schedule.js"
+    },
+    "./commands": {
+      "default": "./commands.js"
+    },
+    "./calendar": {
+      "default": "./calendar.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "//dependencies": [
+    "事件存储是**真正的依赖**，必须显式声明（PLUGIN_CONTRACT §3：跨包引用只能用包名 + file:）。",
+    "",
+    "⚠ 本包**刻意不依赖 @lh/course-tree**，这是加载安全要求而不是洁癖：",
+    "  本包会被 preset 行按**绝对路径**从源码树加载（plugins/lh-schedule/index.js），",
+    "  而源码树的 node_modules/@lh/ 下只有根 package.json 声明过的包——实测",
+    "  node_modules/@lh/course-tree **不存在**（根只声明了 event-store 与 question-bank）。",
+    "  任何一条解析不到的静态导入都会让整棵插件树加载失败、dsh 完全起不来（契约 §〇 形态②）。",
+    "  所以课程清单在 calendar.js 里**当参数收**，由拿得到 course-tree 的那一半（界面服务端）喂进来。",
+    "",
+    "四个文件的分工：schedule.js=投影（唯一，纯函数、零依赖）；commands.js=写入（唯一）；",
+    "calendar.js=按日期索引的视图组装（唯一）；index.js=工具与上下文注入（宿主接缝）。"
+  ],
+  "dependencies": {
+    "@lh/event-store": "file:../lh-event-store"
+  },
+  "files": [
+    "index.js",
+    "schedule.js",
+    "commands.js",
+    "calendar.js"
+  ],
+  "lh": {
+    "kind": "capability",
+    "summary": "学习日程：lh/schedule/* 事件的投影 + 四工具（create/list/update/cancel；list 按日期区间同时读计划、对话活动与课程动作）+ 今天的日程注入运行时上下文 lh:agenda（order 118）+ 唯一投影 schedule.js / 唯一写入 commands.js / 唯一日历视图 calendar.js",
+    "//inject": [
+      "只有 tools 是硬依赖。systemPrompt 改成可选（ctx.inject 等它），",
+      "因为硬依赖会让'拿不到 systemPrompt'变成'整个插件不激活、四个工具一起消失'。"
+    ],
+    "inject": ["tools"],
+    "provides": {
+      "tools": ["create_schedule", "list_schedule", "update_schedule", "cancel_schedule"],
+      "contexts": ["lh:agenda"],
+      "events": [
+        "lh/schedule/created",
+        "lh/schedule/updated",
+        "lh/schedule/linked",
+        "lh/schedule/done",
+        "lh/schedule/cancelled"
+      ],
+      "modules": ["@lh/schedule/schedule", "@lh/schedule/commands", "@lh/schedule/calendar"]
+    },
+    "depends_on": ["@lh/event-store"],
+    "loads_at": "preset",
+    "//verified": [
+      "gates：2026-10-09 跑过 `node scripts/check-all.mjs` —— 27 绿 / 0 不该红（含本包的 selftest 80 条断言、",
+      "  check-plugin-imports / check-profile-apply / check-plugin-contract / check-preset-mount 都覆盖了本包）。",
+      "live：同日 `node scripts/install-lh-schedule.mjs --live` 全绿——真路由打了 /health（1039 条事件、",
+      "  今天按 Asia/Shanghai 算出 2026-10-09）、/calendar（31 天、13 门课），并真建了一条日程再撤销。",
+      "  `lh:agenda` 上下文在真实会话里已生效（模型确实看到了今天的日期）。"
+    ],
+    "verified": { "gates": true, "live": true }
+  }
+}

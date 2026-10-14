@@ -1,0 +1,52 @@
+{
+  "name": "@lh/model-tier",
+  "version": "0.0.2",
+  "private": true,
+  "type": "module",
+  "description": "LH 的模型档位中间件：把插件的档位建议解析成具体模型、发起调用、把降级事实作为数据返回，并把档位可用性写进运行时上下文。除模型白名单（防 agent 自选计费模型，不在授权集就拒绝）外绝不阻断、绝不弹框、绝不改宿主 adaptor。",
+  "main": "index.js",
+  "exports": {
+    ".": {
+      "default": "./index.js"
+    },
+    "./tier": {
+      "default": "./tier.js"
+    },
+    "./model": {
+      "default": "./model.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "//dependencies": [
+    "@lh/event-store 提供 LH 数据目录的定位（`@lh/event-store/paths`）。",
+    "档位配置文件就住在那儿，所以这是**真正的依赖**，必须显式声明 ——",
+    "见 PLUGIN_CONTRACT §3（跨包引用只能用包名 + file: 声明）。",
+    "本包只由 agent preset 按绝对路径加载（不进 profile），所以不会有'安装副本陈旧'的问题。"
+  ],
+  "dependencies": {
+    "@lh/event-store": "file:../lh-event-store"
+  },
+  "files": [
+    "index.js",
+    "tier.js",
+    "model.js"
+  ],
+  "lh": {
+    "kind": "capability",
+    "summary": "按档位调模型：解析候选链、真实调用失败才降级、降级事实作为数据返回；并把档位可用性写进运行时上下文",
+    "//inject": [
+      "只留硬依赖 llm（解析 provider 并发起调用）。",
+      "systemPrompt 改成可选（ctx.inject 等它）——它只是把档位可用性写进上下文，",
+      "硬依赖会让'拿不到 systemPrompt'变成'整个插件不激活'（2026-10-13）。"
+    ],
+    "inject": ["llm"],
+    "provides": {
+      "contexts": ["lh:model-tiers"],
+      "events": ["lh/security/rejected-model"],
+      "modules": ["@lh/model-tier/model", "@lh/model-tier/tier"]
+    },
+    "depends_on": ["@lh/event-store"],
+    "loads_at": "preset",
+    "verified": { "gates": true, "live": true }
+  }
+}

@@ -1,0 +1,41 @@
+{
+  "name": "@lh/asserter",
+  "version": "0.0.1",
+  "private": true,
+  "description": "LH 的断言器：订阅已绑定课程的学习会话输入，按节点选断言器真调模型产断言，沿课程树向上递归传递（每跳写一条 lh/assertion/made）。含断言器注册表、传递路径解析（纯函数）与测试期的虚拟断言器。",
+  "type": "module",
+  "main": "index.js",
+  "exports": {
+    ".": {
+      "default": "./index.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "//dependencies": [
+    "三个跨包依赖都用包名 import + file: 声明（PLUGIN_CONTRACT §3）。",
+    "@lh/event-store：写断言事件（直接构造 LhEventStore，同 recorder-trace）。",
+    "@lh/course-tree：树投影（buildTree/resolveNodeOfSession/scopeOf），断言按它定位节点与父链。",
+    "@lh/model-tier：callModel 真调模型（虚拟断言器用 flash 档）。"
+  ],
+  "dependencies": {
+    "@lh/event-store": "file:../lh-event-store",
+    "@lh/course-tree": "file:../lh-course-tree",
+    "@lh/model-tier": "file:../lh-model-tier"
+  },
+  "files": [
+    "index.js",
+    "asserters.js",
+    "asserters/virtual.js"
+  ],
+  "lh": {
+    "kind": "capability",
+    "summary": "断言的产生与向上传递：订阅已绑定课程的 lh 会话输入→按节点选断言器→真调模型产断言→沿课程树递归传递，每跳写一条 lh/assertion/made（derived_from 成链、propagate_to 逐级指父）",
+    "inject": ["llm", "sessions"],
+    "provides": {
+      "events": ["lh/assertion/made"]
+    },
+    "depends_on": ["@lh/event-store", "@lh/course-tree", "@lh/model-tier"],
+    "loads_at": "preset",
+    "verified": { "gates": false, "live": false }
+  }
+}

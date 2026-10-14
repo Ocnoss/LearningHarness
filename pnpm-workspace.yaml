@@ -1,0 +1,19 @@
+# LH 工作区声明。
+#
+# ═══ 为什么需要这个文件 ═══
+# plugins/ 下的每个插件都是独立包，它们**之间**必须用包名互相引用
+# （相对路径 `../lh-event-store/store.js` 装进 profile 后就会断，
+# 而导入失败会让整棵插件树加载失败、dsh 完全起不来——实测踩过）。
+#
+# 用包名引用，就要求这些包名**在源码树里也解析得到**。
+# 之前是靠根 package.json 里的 `file:plugins/...` 依赖——但那是错的：
+#
+#   **pnpm 对 `file:` 目录依赖是"复制"到 node_modules/.pnpm 下再软链过去，
+#     不是软链到源码。** 于是改源码不生效，而"改了没生效"和"改错了"
+#     从外面看一模一样。
+#
+# 声明成 workspace 成员、并用 `workspace:*` 引用之后，pnpm 会把
+# `node_modules/@lh/x` **直接软链到 `plugins/lh-x`**——源码即生效。
+# 见 scripts/check-installed-copies.mjs（它专门盯这件事）。
+packages:
+  - 'plugins/*'

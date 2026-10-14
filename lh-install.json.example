@@ -1,0 +1,21 @@
+{
+  "//": [
+    "LH 的安装配置**模板** —— 复制成本目录的 lh-install.json 后按自己的机器改。",
+    "真文件不入库：它是'装的时候写下、运行时只读'的机器本地配置（见 .gitignore）。",
+    "",
+    "两步：",
+    "  1. cp lh-install.json.example lh-install.json",
+    "  2. workspace 改成你的学习资料工作区（内含 lh-questions/ 的那个目录）。",
+    "",
+    "repo_root 写 \".\" 表示「本文件所在目录就是仓库根」——它跟着仓库走，",
+    "任何机器、任何盘符、clone 到哪都不用改（paths.js 以配置文件所在目录为基准解析相对值）。",
+    "想把数据放仓库外时才用 data_dir 显式指定。",
+    "",
+    "临时覆盖用环境变量：LH_DATA_DIR / LH_WORKSPACE。",
+    "谁读它：plugins/lh-event-store/paths.js（其它插件都经由它）。",
+    "谁生成 profile 里那份：node scripts/sync-lh-deps.mjs（按本文件 + 当前机器重算）。"
+  ],
+  "repo_root": ".",
+  "data_dir": null,
+  "workspace": ""
+}

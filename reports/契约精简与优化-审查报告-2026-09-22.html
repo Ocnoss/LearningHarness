@@ -1,0 +1,804 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LH 文档体系全景 &amp; 契约精简方案 · 2026-09-22</title>
+<style>
+  :root{
+    --bg:#f6f5f1; --card:#ffffff; --ink:#23262c; --muted:#6b7280; --line:#e5e2db;
+    --accent:#1f5fbf; --accent-soft:#e8f0fb; --amber:#9a5b00; --amber-soft:#fdf3e0;
+    --red:#a52525; --red-soft:#fbeaea; --green:#146b3a; --green-soft:#e6f4ec;
+    --code-bg:#f1efe9; --shadow:0 1px 3px rgba(30,35,45,.08),0 4px 14px rgba(30,35,45,.05);
+  }
+  [data-theme="dark"]{
+    --bg:#131519; --card:#1b1e25; --ink:#e7e5e0; --muted:#98a0ad; --line:#2b303a;
+    --accent:#6ba0ff; --accent-soft:#1d2940; --amber:#e0a458; --amber-soft:#2e2517;
+    --red:#ef8a8a; --red-soft:#331c1c; --green:#6fce97; --green-soft:#16281d;
+    --code-bg:#22262e; --shadow:0 1px 3px rgba(0,0,0,.4);
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{margin:0;background:var(--bg);color:var(--ink);
+    font-family:"Segoe UI","Microsoft YaHei UI","Microsoft YaHei",system-ui,sans-serif;
+    font-size:15px;line-height:1.75}
+  code,pre{font-family:"Cascadia Code",Consolas,"Courier New",monospace}
+  code{background:var(--code-bg);padding:.1em .35em;border-radius:4px;font-size:.86em}
+  pre{background:var(--code-bg);border:1px solid var(--line);border-radius:8px;
+    padding:12px 14px;overflow-x:auto;font-size:12.5px;line-height:1.6;cursor:pointer;position:relative}
+  pre:hover{border-color:var(--accent)}
+  pre .copied{position:absolute;top:6px;right:8px;font-size:11px;color:var(--green);display:none}
+  a{color:var(--accent);text-decoration:none}
+  a:hover{text-decoration:underline}
+  h1{font-size:26px;line-height:1.35;margin:0 0 6px}
+  h2{font-size:20px;margin:0 0 14px;padding-bottom:8px;border-bottom:2px solid var(--accent)}
+  h3{font-size:16.5px;margin:26px 0 10px}
+  h4{font-size:14.5px;margin:18px 0 8px;color:var(--muted)}
+  p{margin:8px 0}
+  blockquote{margin:10px 0;padding:8px 14px;border-left:3px solid var(--accent);
+    background:var(--accent-soft);border-radius:0 6px 6px 0;color:var(--ink)}
+  blockquote p{margin:4px 0}
+  table{border-collapse:collapse;width:100%;margin:10px 0;font-size:13.5px;background:var(--card)}
+  th,td{border:1px solid var(--line);padding:6px 10px;text-align:left;vertical-align:top}
+  th{background:var(--code-bg);font-weight:600}
+  tr:nth-child(even) td{background:color-mix(in srgb,var(--card) 96%,var(--ink) 4%)}
+  ul{margin:8px 0;padding-left:22px}
+  li{margin:4px 0}
+  .wrap{display:block}
+  #progress{position:fixed;top:0;left:0;height:3px;background:var(--accent);width:0;z-index:99}
+  nav.side{position:fixed;top:0;left:0;bottom:0;width:236px;overflow-y:auto;background:var(--card);
+    border-right:1px solid var(--line);padding:18px 14px 30px;font-size:13px}
+  nav.side .brand{font-weight:700;font-size:14px;margin-bottom:14px;line-height:1.4}
+  nav.side a{display:block;padding:5px 9px;border-radius:6px;color:var(--ink);margin:1px 0}
+  nav.side a:hover{background:var(--accent-soft);text-decoration:none}
+  nav.side a.on{background:var(--accent-soft);color:var(--accent);font-weight:600}
+  nav.side a.sub{padding-left:22px;font-size:12.5px;color:var(--muted)}
+  nav.side .navsec{margin-top:12px;font-size:11px;letter-spacing:.12em;color:var(--muted)}
+  #themeBtn{margin-top:16px;width:100%;padding:7px;border:1px solid var(--line);border-radius:8px;
+    background:var(--code-bg);color:var(--ink);cursor:pointer;font-size:12.5px}
+  main{margin-left:236px;padding:28px 34px 80px;max-width:1020px}
+  section{background:var(--card);border:1px solid var(--line);border-radius:14px;
+    padding:22px 26px;margin:0 0 26px;box-shadow:var(--shadow)}
+  .hero{background:linear-gradient(135deg,var(--accent-soft),var(--card) 70%)}
+  .hero .sub{color:var(--muted);font-size:14px;margin-bottom:12px}
+  .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:12px;margin:12px 0}
+  .card{border:1px solid var(--line);border-radius:10px;padding:12px 14px;background:var(--card)}
+  .card b{display:block;margin-bottom:4px}
+  .card .m{color:var(--muted);font-size:12.5px}
+  .badge{display:inline-block;padding:1px 8px;border-radius:99px;font-size:11.5px;font-weight:600;
+    white-space:nowrap;border:1px solid transparent}
+  .b-green{background:var(--green-soft);color:var(--green);border-color:var(--green)}
+  .b-amber{background:var(--amber-soft);color:var(--amber);border-color:var(--amber)}
+  .b-red{background:var(--red-soft);color:var(--red);border-color:var(--red)}
+  .b-blue{background:var(--accent-soft);color:var(--accent);border-color:var(--accent)}
+  .b-gray{background:var(--code-bg);color:var(--muted);border-color:var(--line)}
+  .tree{background:var(--code-bg);border:1px solid var(--line);border-radius:8px;padding:12px 14px;
+    font-family:Consolas,monospace;font-size:12.5px;line-height:1.75;overflow-x:auto;white-space:pre}
+  .kbd{border:1px solid var(--line);border-bottom-width:2px;border-radius:5px;padding:0 5px;
+    font-size:12px;background:var(--code-bg)}
+  .note{font-size:12.5px;color:var(--muted)}
+  .del{text-decoration:line-through;color:var(--muted)}
+  .fig{border:1px solid var(--line);border-radius:10px;padding:10px;background:var(--card);overflow-x:auto}
+  footer{color:var(--muted);font-size:12.5px;text-align:center;padding:10px 0 30px}
+  @media(max-width:900px){nav.side{display:none}main{margin-left:0;padding:16px}}
+</style>
+</head>
+<body>
+<div id="progress"></div>
+
+<nav class="side">
+  <div class="brand">LH 文档体系全景<br>&amp; 契约精简方案</div>
+  <div class="navsec">总览</div>
+  <a href="#s1">1 · 四项决定与审查结论</a>
+  <a href="#s2">2 · 文档结构索引目录</a>
+  <a href="#s3">3 · 全文件摘要</a>
+  <div class="navsec">关联与影响</div>
+  <a href="#s4">4 · 文档联系图</a>
+  <a href="#s5">5 · 对项目实现的指导影响</a>
+  <div class="navsec">手动修改清单</div>
+  <a href="#s6">6 · 修改参考意见</a>
+  <a href="#s6a" class="sub">6.1 ARCHITECTURE（R1–R6）</a>
+  <a href="#s6b" class="sub">6.2 PLUGIN_CONTRACT（P1–P2）</a>
+  <a href="#s6c" class="sub">6.3 WORKFLOW 合并（W1–W9）</a>
+  <a href="#s6d" class="sub">6.4 LH内核契约（K1–K4）</a>
+  <a href="#s6e" class="sub">6.5 交叉引用（X1–X8）</a>
+  <a href="#s6f" class="sub">6.6 删除文件（2 个）</a>
+  <a href="#s7">7 · 改完后的自检</a>
+  <a href="#s8">8 · 记录在案的观察</a>
+  <button id="themeBtn">切换深色 / 浅色</button>
+</nav>
+
+<main>
+
+<section class="hero" id="top">
+  <h1>LearningHarness 文档体系全景 &amp; 契约精简方案</h1>
+  <div class="sub">全量审查报告 · 全文件摘要 · 文档联系图 · 实现指导映射 · 手动修改清单 ｜ 2026-09-22</div>
+  <blockquote>
+    <p><b>这份报告不直接改任何契约文件。</b>阅读顺序：先看 §2–§3 了解文档全貌，再看 §4–§5 理解文档之间、文档与实现之间的关系，最后按 §6 的【位置 / 原文 / 改为】三栏手动替换。改完后跑 <code>node scripts/check-all.mjs</code>，全绿为准。</p>
+    <p><b>改文本的纪律</b>（本项目踩过四次的坑，C12/C15/C21/C23）：只用编辑器或编辑工具，<b>绝不用 PowerShell 的 <code>&gt;</code> / <code>Set-Content</code> / <code>Add-Content</code> 改文本</b>——会写进 BOM 或把多字节字符写成 U+FFFD。</p>
+  </blockquote>
+  <div class="cards">
+    <div class="card"><b>改动总量</b><span class="m">4 个契约文件 21 处修改 + 8 处交叉引用 + 删 2 文件 + 1 次大合并（§7 转写）</span></div>
+    <div class="card"><b>核心动作</b><span class="m">禁令改正向表述 · 清单逐条标闸门 · 两本手册合一 · 过期文档删除</span></div>
+    <div class="card"><b>不可动的锚点</b><span class="m">§E 行为准则编号 1–18（E-8 / E-12 被外部脚本注释锚定）</span></div>
+    <div class="card"><b>保护性内容</b><span class="m">ADR-025 原则：迁移压缩不删——"错得贵"教训句、"闸报器"类句子全部保留</span></div>
+  </div>
+</section>
+
+<section id="s1">
+  <h2>1 · 四项决定与审查结论</h2>
+  <h3>1.1 本次处置的四项决定（已确认）</h3>
+  <table>
+    <tr><th style="width:30px">#</th><th style="width:44%">问题</th><th>决定</th></tr>
+    <tr><td>1</td><td>ARCHITECTURE 的“分层法律”与 §5“取题上限 10 条、只允许从此取题”两条禁令限制 agent 开发</td>
+        <td><b>改写为正向表述</b>：删掉两条禁令，保留“文档不得先于闭环扩张、最小闭环优先”的正向条款；第四条产品法律不变</td></tr>
+    <tr><td>2</td><td>PLUGIN_CONTRACT §七 28 条人肉清单，其中大半机器已能查</td>
+        <td><b>清单保留但标注闸门</b>：每条标注【闸门：脚本名】或【人工】，不删项</td></tr>
+    <tr><td>3</td><td>WORKFLOW.md 与 COLLABORATOR_MODEL.md 两本规则手册重复、编号已漂移</td>
+        <td><b>合并成一份</b>：COLLABORATOR_MODEL 整体并入 WORKFLOW 作为 §7，原文件删除</td></tr>
+    <tr><td>4</td><td>docs/HANDOFF-lh-practice启动事故.md 过期</td>
+        <td><b>直接删除</b>（git 历史可查），被引用处标注“已删除”</td></tr>
+  </table>
+
+  <h3>1.2 审查结论：契约为什么在限制开发</h3>
+  <div class="cards">
+    <div class="card"><b>① 机器能查的写成了人肉清单</b><span class="m">§七 28 条里 12 条已被 check-* 脚本全/部分覆盖，文档却不区分“机器把守/人工把守”，每次开发都要通读 571 行逐条人肉对照——“契约限制 agent”的最大来源。处置：P2 逐条标注。</span></div>
+    <div class="card"><b>② 一条规则散布 3–5 处且已漂移</b><span class="m">“破坏性白名单”写在 WORKFLOW 规则 4、COLLABORATOR_MODEL E-4/C10、PLUGIN_CONTRACT 严重级三处；修订记录叫它“规则 5”、正文是“规则 4”；COLLABORATOR 头部引用“§2 规则 5”实际指规则 6。处置：合并（W8/W9）+ 权威出处声明（R6）。</span></div>
+    <div class="card"><b>③ 两条字面禁令在伤害开发</b><span class="m">“第 N 层未冻结禁止讨论第 N+1 层”+“新窗口只允许从 §5 取题（上限 10 条）”直接限制探索与提问，且项目自己已认定它们有害——COLLABORATOR_MODEL A5 把“项目停滞”归因于这两条。处置：R1/R4 改正向。</span></div>
+    <div class="card"><b>④ 过期内容与索引脱节</b><span class="m">HANDOFF 是一次性事故交接；ARCHITECTURE §6 索引停在 ADR-011（实际已有 034）；LH内核契约 §9 待决清单两项已被 ADR 决掉还挂着“待决”。处置：删 / R5 / K2–K4。</span></div>
+  </div>
+</section>
+
+<section id="s2">
+  <h2>2 · 文档结构索引目录</h2>
+  <p>全仓 Markdown 共 <b>64 个</b>（docs/ 55 + 仓库根 1 + reports/ 4 + 本报告 1 + 报告 MD 版 1）。按“法律层级”分为六层：<b>宪法与契约</b → <b>决策</b> → <b>证据</b> → <b>草稿</b> → <b>快照</b> → <b>待处置</b>。徽章列给出本次审查的处置结论。</p>
+  <div class="tree">LearningHarnessv0.1/
+├── LH内核契约-v0.1.md ……………………… 宪法层：概念与语法的权威定义（358 行）
+├── docs/
+│   ├── ARCHITECTURE.md ……………………… 架构宪章：分层模型 / 冻结状态 / 开放问题（225 行）
+│   ├── PLUGIN_CONTRACT.md ………………… 契约层：注册 schema + 闸门 + Review 清单（570 行）
+│   ├── WORKFLOW.md …………………………… 流程层：开发与协作规范（249 行 → 合并后约 450 行）
+│   ├── COLLABORATOR_MODEL.md …………… 协作者模型断言集（229 行，→ 并入 WORKFLOW §7 后删除）
+│   ├── HANDOFF-lh-practice启动事故.md … 一次性事故交接（130 行，→ 删除）
+│   ├── decisions/001…034 ………………… 决策层：34 份 ADR（约 3,550 行）
+│   ├── experience/ …………………………… 证据层：14 份经验台账（约 2,750 行）
+│   │   ├── README.md · TEMPLATE.md
+│   │   ├── 决策记录者/ ×1   插件开发者/ ×8   项目作者/ ×2
+│   └── skills-draft/lh-plugin-development/  草稿：对外技能包（2 个文件）
+├── reports/ ……………………………………… 快照层：历史项目报告（不回写契约）
+│   └── 契约精简与优化-审查报告-2026-09-22.{md,html}  ← 本报告
+├── plugins/ ×10 ……………………………… 实现层：LH 全部功能（一切皆插件）
+├── scripts/ …………………………………… 执行层：13 个 check-* 闸门 + 5 个 selftest + check-all
+└── lh-install.json · pnpm-workspace.yaml … 安装与依赖拓扑</div>
+
+  <h3>2.1 宪法与契约层（本次修改的主战场）</h3>
+  <table>
+    <tr><th>文件</th><th style="width:60px">行数</th><th>角色定位（权威范围）</th><th style="width:96px">本次处置</th></tr>
+    <tr><td><a href="file:///d:/LearningHarnessv0.1/LH内核契约-v0.1.md">LH内核契约-v0.1.md</a><br><span class="note">（仓库根）</span></td><td>358</td>
+        <td><b>概念与语法权威</b>：内核五概念（节点/事件/投影/Handoff/Agent 注册表）、事件词汇表（User 四元组 + Agent tracing）、断言语法（§4.1 出处/置信度/可推翻）、§9 待决清单</td>
+        <td><span class="badge b-amber">K1–K4 标注</span></td></tr>
+    <tr><td><a href="file:///d:/LearningHarnessv0.1/docs/ARCHITECTURE.md">docs/ARCHITECTURE.md</a></td><td>225</td>
+        <td><b>架构宪章</b>：分层模型（理念/架构/接口/实现）、当前在运行的东西、15 条宿主约束速查、开放问题清单、决策索引。约束的权威出处在 PLUGIN_CONTRACT，本文件是速查</td>
+        <td><span class="badge b-amber">R1–R6 修改</span></td></tr>
+    <tr><td><a href="file:///d:/LearningHarnessv0.1/docs/PLUGIN_CONTRACT.md">docs/PLUGIN_CONTRACT.md</a></td><td>570</td>
+        <td><b>插件契约权威</b>：Cordis/dsh 注册 schema（服务端/客户端）、写文件与依赖规矩、§六五问、§七 Review 清单 28 条、§八闸门清单。含报错原文与修法，冲突时以它为准</td>
+        <td><span class="badge b-amber">P1–P2 修改</span></td></tr>
+    <tr><td><a href="file:///d:/LearningHarnessv0.1/docs/WORKFLOW.md">docs/WORKFLOW.md</a></td><td>249</td>
+        <td><b>开发与协作流程权威</b>：三条前提、分工（人做判断/AI 做其余）、§2 六规则、§3 决策六要素、§4 七义务、§5 熔断、§6 与内核契约对照</td>
+        <td><span class="badge b-amber">W1–W9 合并升级</span></td></tr>
+    <tr><td><a href="file:///d:/LearningHarnessv0.1/docs/COLLABORATOR_MODEL.md">docs/COLLABORATOR_MODEL.md</a></td><td>229</td>
+        <td>协作者模型断言集：A1–A9 能力观察 / B1–B18 协作偏好 / C1–C23 错误台账 / D1–D7 待验证 / §E 行为准则 18 条。与 WORKFLOW 重复且引用编号已漂移</td>
+        <td><span class="badge b-red">并入 §7 后删除</span></td></tr>
+    <tr><td><a href="file:///d:/LearningHarnessv0.1/docs/HANDOFF-lh-practice启动事故.md">docs/HANDOFF-lh-practice启动事故.md</a></td><td>130</td>
+        <td>2026-09-17 lh-practice 启动失败事故的一次性交接（根因/修法/待执行步骤）。事故已修复，教训已回填经验台账与闸门</td>
+        <td><span class="badge b-red">删除</span></td></tr>
+  </table>
+
+  <h3>2.2 决策层（docs/decisions/，34 份 ADR）</h3>
+  <p class="note">001–008 为 7 行迷你 ADR（口号式）；009 起扩为完整 ADR（背景/关键事实/决定/排除项/失效信号）。详细摘要见 §3.2。</p>
+  <table>
+    <tr><th>区段</th><th>覆盖主题</th><th style="width:96px">本次处置</th></tr>
+    <tr><td>001–011 <span class="note">立国与宿主</span></td><td>一切皆插件、事实/解释切分、建模插件化、策略 bundle、钩子教学法、事件日志、官方兜底、内核先行(废)、资源记录、产品形式(修)、宿主采用 dsh（含第四条产品法律）</td><td><span class="badge b-gray">不动</span> <span class="badge b-blue">016 引用修正</span></td></tr>
+    <tr><td>012–021 <span class="note">数据与题库</span></td><td>事件信封、外观边界、事件四类、工具归属、模型档位、题库对象/物理形态、刷题循环、抽取单位、LLM 预处理（含结论七两轴词表）</td><td><span class="badge b-gray">不动</span></td></tr>
+    <tr><td>022–031 <span class="note">工程与运行</span></td><td>刷题面板启动、版本控制、部署流程、装载期不抛错（ADR-025 内容保护原则）、外观声明、视频证据、题目 id、抽取分工、会话基础能力、开发隔离</td><td><span class="badge b-gray">不动</span> <span class="badge b-blue">033 引用修正</span></td></tr>
+    <tr><td>032–034 <span class="note">课程树与断言</span></td><td>课程树事件溯源表达、断言器插件化、虚拟断言器与自动触发三重护栏</td><td><span class="badge b-gray">不动</span></td></tr>
+  </table>
+
+  <h3>2.3 证据层（docs/experience/，14 份）与草稿、快照</h3>
+  <table>
+    <tr><th>目录</th><th>内容</th><th style="width:96px">本次处置</th></tr>
+    <tr><td>experience/ 插件开发者/ ×8</td><td>事故与教训的第一手记录：三次/四次“让 dsh 起不来”、解析截断与 hook 顺序、启动竞态、稳定标识、题库设计全程（809 行）等</td><td><span class="badge b-blue">2 处引用修正</span></td></tr>
+    <tr><td>experience/ 项目作者/ ×2</td><td>作者协作偏好与生态视角——协作者模型 A/B 组断言的证据来源</td><td><span class="badge b-gray">不动</span></td></tr>
+    <tr><td>experience/ 决策记录者/ ×1 + README + TEMPLATE</td><td>ADR 写法与归因；台账的读法、写法与条目模板</td><td><span class="badge b-gray">不动</span></td></tr>
+    <tr><td>skills-draft/lh-plugin-development/</td><td>对外技能包草稿（README + host-compat 兼容清单）——契约对外输出的雏形</td><td><span class="badge b-gray">不动</span></td></tr>
+    <tr><td>reports/ ×5</td><td>历史项目报告快照（含 2026-09-20 项目报告 MD+HTML、工具与实现报告、对外介绍）与本报告</td><td><span class="badge b-gray">历史不回写</span></td></tr>
+  </table>
+</section>
+
+<section id="s3">
+  <h2>3 · 全文件摘要</h2>
+
+  <h3>3.1 契约文件逐份摘要</h3>
+  <div class="cards">
+    <div class="card"><b>LH内核契约-v0.1.md（358 行）<span class="badge b-blue">宪法</span></b>
+      <span class="m">§0 项目定位（LH 是寄生在 dsh 上的学习者模型系统）→ §1 四条总原则（内核拥有语法/插件拥有判断；事件溯源为基座；写细读粗；内核连“什么值得记”都不知道）→ §2 内核五概念（2.1 节点=课程树、2.2 事件=信封+四类、2.3 投影、2.4 Handoff、2.5 Agent 注册表）→ §3 角色与事件词汇表（3.1 User 侧四元组、3.2 Agent 侧 tracing）→ §4 断言与策略层语法（4.1 断言带出处/置信度/可推翻、4.3 知识点体系<待决→部分已决>）→ §9 待决清单 8 项。它是所有插件“共同语言”的定义处。</span></div>
+    <div class="card"><b>ARCHITECTURE.md（225 行）<span class="badge b-amber">宪章</span></b>
+      <span class="m">头部三条“法律”（分层法律→本次删、产品法律→保留、推论→改正向）→ §0 分层模型（理念/架构/接口/实现四层 + 0.1 当前在运行的东西）→ §1–§4 各层冻结状态（2.2 内核三条腿、2.3 事实与解释的第一刀、3.1 Claim 接口、3.2 插件化成熟度）→ 15 条宿主约束速查 → §5 开放问题清单（标题带禁令→本次删）→ §6 决策索引（停在 011→本次更新到 034）。</span></div>
+    <div class="card"><b>PLUGIN_CONTRACT.md（570 行）<span class="badge b-amber">契约</span></b>
+      <span class="m">§〇 起不来的四种形态与“怎么用这本手册” → §一 服务端 schema（inject 服务名/工具注册/HTTP 路由）→ §二 客户端 schema（exports.inject/插槽/bundle 白拿）→ §三 跨插件只能包名+file: → §四 env 惰性 → §五 写文件规矩（原子写+BOM）及 §五之二～之七（apply 不抛错/files/sync-lh-deps/lh-install.json/isolate 组/lh 自我描述）→ §六 五问 → §七 Review 清单 28 条（17 致命+7 严重+4 一般）→ §八 闸门清单 → §九 未验证项。全文带 [实测]/[宿主源码]/[闸门] 来源标注。</span></div>
+    <div class="card"><b>WORKFLOW.md（249 行）<span class="badge b-amber">流程</span></b>
+      <span class="m">§0 三条前提 → §1 分工（人做判断、AI 做其余，判断依据不隐藏）→ §2 六规则（1 单一上下文、2 ≤3 待回应项、3 可观察不设时限、4 破坏性白名单、5 不阻塞记录、6 反馈接收）→ §3 决策六要素 → §4 七义务 → §5 进度与熔断 → §6 与内核契约对照 → 修订记录（v0.4 表内编号漂移）。合并后新增 §7 协作者模型。</span></div>
+    <div class="card"><b>COLLABORATOR_MODEL.md（229 行）<span class="badge b-red">并入</span></b>
+      <span class="m">格式取自内核契约 §4.1 的断言集：A1–A9 作者能力与状态观察（含 A5“停滞根因是治理模型”）、B1–B18 协作偏好、C1–C23 AI 自己的错误台账（含 C10 误删真实数据、C12/15/21/23 四次 shell 改文本写坏文件、C17 相对路径起不来）、D1–D7 低置信猜测、§E 行为准则 18 条、更新记录。全部内容迁入 WORKFLOW §7，编号不变。</span></div>
+    <div class="card"><b>HANDOFF-lh-practice启动事故.md（130 行）<span class="badge b-red">删除</span></b>
+      <span class="m">2026-09-17 事故交接：状态、根因（依赖未进 profile 的 node_modules）、已改修法（⬜ 未验证标记）、待执行恢复步骤、建议补的检查、环境提醒。事故已闭环，恢复步骤已执行完毕，文件失去时效。</span></div>
+  </div>
+
+  <h3>3.2 决策层摘要（decisions/001–034）</h3>
+  <table>
+    <tr><th style="width:44px">ADR</th><th>标题</th><th style="width:70px">状态</th><th>一句话摘要</th></tr>
+    <tr><td>001</td><td>一切皆插件</td><td><span class="badge b-green">有效</span></td><td>LH 全部功能以 dsh/Cordis 插件寄生，不 fork 宿主——整套契约体系的出发点</td></tr>
+    <tr><td>002</td><td>事实归内核解释归插件</td><td><span class="badge b-green">有效</span></td><td>数据（事实）与判断（解释）分离：内核存事件，插件产出断言——§2.3“第一刀”的来源</td></tr>
+    <tr><td>003</td><td>学习者建模插件化</td><td><span class="badge b-green">有效</span></td><td>学习者模型是插件产出的投影，不进内核</td></tr>
+    <tr><td>004</td><td>教学策略即 bundle</td><td><span class="badge b-green">有效</span></td><td>教学策略打包成 bundle 分发，策略可替换可组合</td></tr>
+    <tr><td>005</td><td>教学法靠钩子不靠提示词</td><td><span class="badge b-green">有效</span></td><td>教学动作走钩子/事件注入实现，不靠提示词工程</td></tr>
+    <tr><td>006</td><td>事件日志记录系统行为</td><td><span class="badge b-green">有效</span></td><td>系统行为以事件日志为记录基座（事件溯源的起点）</td></tr>
+    <tr><td>007</td><td>官方插件兜底并锚定生态</td><td><span class="badge b-green">有效</span></td><td>官方插件兜底基础能力、锚定生态位</td></tr>
+    <tr><td>008</td><td>内核先行 L3 冻结为愿景</td><td><span class="badge b-red">已废止</span></td><td>被 ADR-011 废止（L3 部分保留为愿景）——第四条产品法律的反面教材</td></tr>
+    <tr><td>009</td><td>资源记录设计</td><td><span class="badge b-green">有效</span></td><td>学习资源的记录形态（lh-resource-indexer 的依据）</td></tr>
+    <tr><td>010</td><td>产品形式与内核无头化</td><td><span class="badge b-amber">已修订</span></td><td>被 ADR-011 修订；解耦与验证顺序部分保留</td></tr>
+    <tr><td>011</td><td>宿主采用 dsh 与内核自研终止</td><td><span class="badge b-green">有效</span></td><td>内核自研终止、改寄生 dsh；<b>第四条产品法律出自此</b>（任何时刻必须有用户可感知的完整闭环在运行）</td></tr>
+    <tr><td>012</td><td>LH 事件日志形态与信封起步字段</td><td><span class="badge b-green">有效</span></td><td>JSONL 追加日志 + 事件信封起步字段集（内核契约 §9 第 2 项据此标注“已决”）</td></tr>
+    <tr><td>013</td><td>壳级前端推迟与外观边界</td><td><span class="badge b-green">有效</span></td><td>前端壳推迟，先划外观边界</td></tr>
+    <tr><td>014</td><td>事件四类划分与不抄内容</td><td><span class="badge b-green">有效</span></td><td>事件分四类；内容原件不抄进事件、只存引用</td></tr>
+    <tr><td>015</td><td>工具是 LH 的不是我的</td><td><span class="badge b-green">有效</span></td><td>工具归 LH 生态所有，不绑个人工作流</td></tr>
+    <tr><td>016</td><td>模型档位建议而非要求</td><td><span class="badge b-green">有效</span></td><td>lh-model-tier：档位→模型候选链，是建议不是强制</td></tr>
+    <tr><td>017</td><td>题库的对象与接口</td><td><span class="badge b-green">有效</span></td><td>题库对象模型与接口（lh-question-bank 的依据）</td></tr>
+    <tr><td>018</td><td>题库的物理形态与多解表达</td><td><span class="badge b-green">有效</span></td><td>题库物理存储形态；多选多解的表达</td></tr>
+    <tr><td>019</td><td>刷题循环的接口形态</td><td><span class="badge b-green">有效</span></td><td>刷题循环接口（lh-practice 的依据）</td></tr>
+    <tr><td>020</td><td>资料分类与题目抽取的单位</td><td><span class="badge b-green">有效</span></td><td>资料分类与抽取单位（抽取链 scripts/ 的依据）</td></tr>
+    <tr><td>021</td><td>入库前的 LLM 预处理与题解的多个来源</td><td><span class="badge b-green">有效</span></td><td>LLM 预处理管线；题解多来源。<b>结论七 = 两轴封闭词表</b>（题型 17 项 + 领域 5 项）——内核契约 §4.3/§9 第 4 项的“部分已决”依据</td></tr>
+    <tr><td>022</td><td>刷题面板由对话启动</td><td><span class="badge b-green">有效</span></td><td>lh-practice 面板由对话驱动启动</td></tr>
+    <tr><td>023</td><td>版本控制范围与启动包装器</td><td><span class="badge b-green">有效</span></td><td>git 覆盖范围与启动包装器（.gitignore/.gitattributes 的依据）</td></tr>
+    <tr><td>024</td><td>部署流程与开发类插件</td><td><span class="badge b-green">有效</span></td><td>安装/同步/部署流程（sync-lh-deps、lh-install.json 的依据）</td></tr>
+    <tr><td>025</td><td>装载期不许抛错与安装期配置</td><td><span class="badge b-green">有效</span></td><td>apply() 装载期绝不抛错 + 安装期配置。<b>内容保护原则（迁移压缩不删）出自此</b></td></tr>
+    <tr><td>026</td><td>外观由 agent 声明意图</td><td><span class="badge b-green">有效</span></td><td>渲染由 agent 声明意图、主题解释（lh-theme 的依据）</td></tr>
+    <tr><td>027</td><td>视频是有时间索引的证据源</td><td><span class="badge b-green">有效</span></td><td>视频 = 带时间索引的证据源</td></tr>
+    <tr><td>028</td><td>题目 id 必须全局唯一</td><td><span class="badge b-green">有效</span></td><td>题目 ID 全局唯一规范</td></tr>
+    <tr><td>029</td><td>抽取链的两侧分工</td><td><span class="badge b-green">有效</span></td><td>OCR 抽取与对齐的分工（scripts/*.py 与 *.mjs 两侧的分工依据）</td></tr>
+    <tr><td>030</td><td>LH 会话带上基础能力分两批</td><td><span class="badge b-green">有效</span></td><td>基础工具分两批挂进 LH 会话</td></tr>
+    <tr><td>031</td><td>开发隔离把 dsh 的家迁进工作区</td><td><span class="badge b-green">有效</span></td><td>dsh home 迁进工作区做开发隔离（compare-homes 闸门的依据）</td></tr>
+    <tr><td>032</td><td>课程树的事件溯源表达</td><td><span class="badge b-green">有效</span></td><td>课程树结构也由事件表达、可回放（lh-course-tree 的依据）</td></tr>
+    <tr><td>033</td><td>断言器插件化与传递路径声明</td><td><span class="badge b-green">有效</span></td><td>lh-asserter 插件化；传递路径显式声明</td></tr>
+    <tr><td>034</td><td>虚拟断言器与自动触发护栏</td><td><span class="badge b-green">有效</span></td><td>测试期真调模型（flash 档）产固定文本 + 自动触发三重护栏；异步、绝不抛</td></tr>
+  </table>
+
+  <h3>3.3 经验台账摘要（docs/experience/，14 份）</h3>
+  <p class="note">台账是协作者模型断言的<b>证据来源</b>——C 组错误台账的每条都能回溯到这里的具体事故。</p>
+  <table>
+    <tr><th>文件</th><th style="width:52px">行数</th><th>一句话摘要</th></tr>
+    <tr><td>README.md / TEMPLATE.md</td><td>70 / 20</td><td>台账的读法、写法与条目模板（出处/置信度/可推翻格式的执行端）</td></tr>
+    <tr><td>决策记录者/2026-09-15-ADR写法与归因</td><td>43</td><td>ADR 怎么写、错误怎么归因</td></tr>
+    <tr><td>插件开发者/2026-09-15-dsh插件挂载验证</td><td>102</td><td>首次把插件挂进 dsh 的验证记录</td></tr>
+    <tr><td>插件开发者/2026-09-16-插件开发与多模型分工</td><td>309</td><td>插件开发流程与多模型分工</td></tr>
+    <tr><td>插件开发者/2026-09-17-题库对象与接口</td><td>809</td><td>题库对象与接口设计全程（台账里最大篇幅，对应 ADR-017/018）</td></tr>
+    <tr><td>插件开发者/2026-09-18-0100-让dsh起不来的三次事故</td><td>250</td><td>依赖/路径类三次“起不来”事故——PLUGIN_CONTRACT §〇“四种形态”的素材</td></tr>
+    <tr><td>插件开发者/2026-09-18-0330-版本控制边界与schema契约</td><td>93</td><td>git 边界与 schema 契约（对应 ADR-023）</td></tr>
+    <tr><td>插件开发者/2026-09-18-2100-让dsh起不来的第四次事故</td><td>145</td><td>第四次“起不来”事故</td></tr>
+    <tr><td>插件开发者/2026-09-18-2330-解析截断与作用域搞错与hook顺序</td><td>129</td><td>解析截断、作用域、hook 顺序三类教训</td></tr>
+    <tr><td>插件开发者/2026-09-19-0400-启动竞态与被布置成看不见bug的测试</td><td>136</td><td>启动竞态；自测被“布置成看不见 bug”——selftest 体系的动机</td></tr>
+    <tr><td>插件开发者/2026-09-19-1400-产物没有稳定标识等于没产出</td><td>283</td><td>产物稳定标识；引用 §E-8（外部锚点之一）</td></tr>
+    <tr><td>项目作者/2026-09-15-协作方式反馈</td><td>58</td><td>作者对协作方式的直接反馈——A/B 组断言的证据</td></tr>
+    <tr><td>项目作者/2026-09-16-工具归属与生态视角</td><td>124</td><td>工具归属与生态视角——A9（生态思维）断言的出处</td></tr>
+  </table>
+
+  <h3>3.4 实现与执行端（契约的落地物）</h3>
+  <p>“一切皆插件”意味着文档层的一切最终压在这两处：<code>plugins/</code> 10 个插件（功能）与 <code>scripts/</code> 闸门体系（契约的机械化）。详细映射见 §5。</p>
+  <table>
+    <tr><th style="width:170px">plugins/</th><th style="width:150px">对应 ADR</th><th>一句话职责</th></tr>
+    <tr><td>lh-event-store</td><td>012 / 014 / 006</td><td>事件存储：<code>data/events.jsonl</code> 追加日志（内核“事件”概念的实现）</td></tr>
+    <tr><td>lh-course-tree</td><td>032</td><td>课程树：节点由事件表达、可回放（内核“节点”概念的实现）</td></tr>
+    <tr><td>lh-course-ui</td><td>013 / 026</td><td>课程树客户端 UI（插槽注册、exports.inject 的典型用户）</td></tr>
+    <tr><td>lh-question-bank</td><td>017 / 018 / 028</td><td>题库：对象、物理形态、全局唯一 id</td></tr>
+    <tr><td>lh-practice</td><td>019 / 022</td><td>刷题循环与面板（对话启动）</td></tr>
+    <tr><td>lh-asserter</td><td>033 / 034</td><td>断言器：投影→断言（内核“投影”概念的实现；异步绝不抛）</td></tr>
+    <tr><td>lh-model-tier</td><td>016</td><td>模型档位中间件：档位→候选模型链</td></tr>
+    <tr><td>lh-recorder-trace</td><td>006 / 014</td><td>Agent 侧 tracing 记录（内核契约 §3.2 词汇表的实现）</td></tr>
+    <tr><td>lh-resource-indexer</td><td>009</td><td>资源索引（走 lh-install.json 定位数据目录的典型用户）</td></tr>
+    <tr><td>lh-theme</td><td>026</td><td>主题：解释 agent 的渲染意图声明</td></tr>
+    <tr><th>scripts/</th><th>依据</th><th>一句话职责</th></tr>
+    <tr><td>check-all.mjs</td><td>PLUGIN_CONTRACT §八</td><td>闸门调度器：自动发现 + EXPECTED_RED + 90s 超时，全绿为准</td></tr>
+    <tr><td>check-* ×12</td><td>§一–§七 各条款</td><td>专项闸门：plugin-contract / plugin-imports / profile-apply / client-inject / client-slot-timing / preset-mount / installed-copies / paths-resolution / hardcoded-paths / restart / text-encoding / compare-homes</td></tr>
+    <tr><td>selftest-* ×5</td><td>C 组教训</td><td>闸门的自证（“闸门先红过”）：installed-copies / plugin-contract / preset-mount / memory-sampler / text-encoding</td></tr>
+  </table>
+</section>
+
+<section id="s4">
+  <h2>4 · 文档联系图</h2>
+  <p>文档体系不是平铺的 64 个文件，而是<b>四层结构 + 五种关系</b>：宪法层定概念与语法，契约层定 schema 与流程，决策与证据层提供出处，实现与执行层落地并把守。实线箭头 = 引用/约束方向；红色虚线 = 本次合并/删除动作。</p>
+  <div class="fig">
+  <svg viewBox="0 0 980 700" width="100%" style="min-width:860px" font-family="'Microsoft YaHei',sans-serif">
+    <style>
+      .nd{fill:var(--card);stroke:var(--line);stroke-width:1.5}
+      .ndx{fill:var(--card);stroke:var(--red);stroke-width:1.5;stroke-dasharray:6 4}
+      .nt{fill:var(--ink);font-size:13px;font-weight:700}
+      .ns{fill:var(--muted);font-size:10.5px}
+      .lb{fill:var(--ink);font-size:10.5px;paint-order:stroke;stroke:var(--card);stroke-width:3px}
+      .bl{fill:var(--muted);font-size:10px;letter-spacing:.15em}
+      .ar{stroke:var(--accent);stroke-width:1.6;fill:none;marker-end:url(#ah)}
+      .ard{stroke:var(--red);stroke-width:1.6;fill:none;stroke-dasharray:5 4;marker-end:url(#ahr)}
+    </style>
+    <defs>
+      <marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+        <path d="M0,0 L10,5 L0,10 z" fill="var(--accent)"/></marker>
+      <marker id="ahr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+        <path d="M0,0 L10,5 L0,10 z" fill="var(--red)"/></marker>
+    </defs>
+    <!-- 分层带 -->
+    <rect x="8" y="26" width="964" height="112" rx="10" fill="var(--accent-soft)" opacity=".55"/>
+    <rect x="8" y="176" width="964" height="112" rx="10" fill="var(--green-soft)" opacity=".55"/>
+    <rect x="8" y="332" width="964" height="162" rx="10" fill="var(--amber-soft)" opacity=".55"/>
+    <rect x="8" y="520" width="964" height="112" rx="10" fill="var(--code-bg)" opacity=".8"/>
+    <text class="bl" x="962" y="42" text-anchor="end">宪法层 · 概念与语法</text>
+    <text class="bl" x="962" y="192" text-anchor="end">契约层 · schema 与流程</text>
+    <text class="bl" x="962" y="348" text-anchor="end">决策与证据层 · 出处所在</text>
+    <text class="bl" x="962" y="536" text-anchor="end">实现与执行层 · 落地与把守</text>
+    <!-- 节点 -->
+    <rect class="nd" x="40" y="48" width="300" height="72" rx="8"/>
+    <text class="nt" x="56" y="72">LH内核契约-v0.1.md</text>
+    <text class="ns" x="56" y="90">概念与语法权威 · 358 行</text>
+    <text class="ns" x="56" y="106">五概念 / 事件词汇表 / 断言语法 §4.1</text>
+    <rect class="nd" x="430" y="48" width="250" height="72" rx="8"/>
+    <text class="nt" x="446" y="72">ARCHITECTURE.md</text>
+    <text class="ns" x="446" y="90">架构宪章 · 225 行</text>
+    <text class="ns" x="446" y="106">分层 / 约束速查 / 开放问题</text>
+    <rect class="nd" x="40" y="196" width="320" height="72" rx="8"/>
+    <text class="nt" x="56" y="220">PLUGIN_CONTRACT.md</text>
+    <text class="ns" x="56" y="238">插件契约权威 · 570 行</text>
+    <text class="ns" x="56" y="254">schema / 五问 / Review 清单 28 条 / 闸门</text>
+    <rect class="nd" x="440" y="196" width="280" height="72" rx="8"/>
+    <text class="nt" x="456" y="220">WORKFLOW.md v0.5</text>
+    <text class="ns" x="456" y="238">开发与协作规范 · 合并后 ≈450 行</text>
+    <text class="ns" x="456" y="254">六规则 / 七义务 / §7 协作者模型（并入）</text>
+    <rect class="nd" x="150" y="352" width="200" height="64" rx="8"/>
+    <text class="nt" x="164" y="376">decisions/ 001–034</text>
+    <text class="ns" x="164" y="394">34 份 ADR · 约 3,550 行</text>
+    <text class="ns" x="164" y="408">决定 + 失效信号</text>
+    <rect class="nd" x="410" y="352" width="200" height="64" rx="8"/>
+    <text class="nt" x="424" y="376">experience/ 台账 ×14</text>
+    <text class="ns" x="424" y="394">约 2,750 行 · 事故与教训</text>
+    <text class="ns" x="424" y="408">断言的证据来源</text>
+    <rect class="ndx" x="670" y="352" width="240" height="64" rx="8"/>
+    <text class="nt" x="684" y="376" fill="var(--red)">COLLABORATOR_MODEL.md</text>
+    <text class="ns" x="684" y="394">断言集 A–E · 229 行</text>
+    <text class="ns" x="684" y="408">→ 并入 WORKFLOW §7 后删除</text>
+    <rect class="ndx" x="670" y="434" width="240" height="44" rx="8"/>
+    <text class="nt" x="684" y="454" fill="var(--red)">HANDOFF-lh-practice启动事故.md</text>
+    <text class="ns" x="684" y="470">→ 删除（git 历史可查）</text>
+    <rect class="nd" x="40" y="540" width="250" height="64" rx="8"/>
+    <text class="nt" x="56" y="564">plugins/ ×10</text>
+    <text class="ns" x="56" y="582">event-store · course-tree · practice…</text>
+    <text class="ns" x="56" y="596">内核五概念的实现载体</text>
+    <rect class="nd" x="330" y="540" width="280" height="64" rx="8"/>
+    <text class="nt" x="344" y="564">scripts/ 闸门 ×12 + selftest ×5</text>
+    <text class="ns" x="344" y="582">check-all.mjs 全绿为准</text>
+    <text class="ns" x="344" y="596">契约条款的机械化把守</text>
+    <rect class="nd" x="660" y="540" width="210" height="64" rx="8"/>
+    <text class="nt" x="674" y="564">reports/ ×5</text>
+    <text class="ns" x="674" y="582">历史项目报告 + 本报告</text>
+    <text class="ns" x="674" y="596">快照，不回写契约</text>
+    <!-- 关系边 -->
+    <path class="ar" d="M430,84 L348,84"/>
+    <text class="lb" x="389" y="76" text-anchor="middle">引概念与语法</text>
+    <path class="ar" d="M460,124 L364,266"/>
+    <text class="lb" x="390" y="188">约束速查 → 权威出处</text>
+    <path class="ar" d="M230,348 L500,128"/>
+    <text class="lb" x="318" y="246">决定写回 · §6 索引</text>
+    <path class="ar" d="M205,348 L185,274"/>
+    <text class="lb" x="212" y="318">条款出处</text>
+    <path class="ar" d="M515,348 L563,274"/>
+    <text class="lb" x="528" y="318">断言的出处/证据</text>
+    <path class="ard" d="M688,348 L648,274"/>
+    <text class="lb" x="640" y="316" fill="var(--red)">并入 §7（本次）</text>
+    <path class="ard" d="M668,458 L545,414"/>
+    <text class="lb" x="548" y="452" fill="var(--red)">教训已回填台账</text>
+    <path class="ar" d="M430,536 L352,274"/>
+    <text class="lb" x="408" y="438">§七 12 条自动覆盖 · §八 闸门清单</text>
+    <path class="ar" d="M100,536 L100,274"/>
+    <text class="lb" x="108" y="300">受 §一–§七 约束</text>
+    <path class="ar" d="M36,90 C10,90 18,572 38,572"/>
+    <text class="lb" x="24" y="340" transform="rotate(-90 24 340)" text-anchor="middle">五概念 → 实现载体</text>
+  </svg>
+  </div>
+
+  <h3>4.1 五种关系的含义（权威链）</h3>
+  <table>
+    <tr><th style="width:90px">关系</th><th>含义</th><th>本次的落点</th></tr>
+    <tr><td><b>写回</b></td><td>ADR 决定改变契约/宪章时，必须走 ADR 写回流程（改动留修订记录），不从零重开讨论</td><td>ARCHITECTURE §6 保留此规则；内核契约 §9 的“已决”标注（K2–K4）就是写回的补账</td></tr>
+    <tr><td><b>出处</b></td><td>断言与条款必须带出处/置信度/可推翻条件（内核契约 §4.1 语法）——协作者模型、经验台账、ADR 都用同一套格式</td><td>W8 章节头明确“格式取自内核契约 §4.1”（修正原文错位引用）</td></tr>
+    <tr><td><b>把守</b></td><td>契约条款由 check-* 闸门机械化验证；闸门自身由 selftest-* 证明“先红过”</td><td>P2 把 28 条逐条标注【闸门：脚本名】/【人工】，把守关系显式化</td></tr>
+    <tr><td><b>并入/删除</b></td><td>内容迁移压缩不删（ADR-025）；时效过的一次性文档删除但 git 可查，引用处标注</td><td>COLLABORATOR_MODEL → WORKFLOW §7；HANDOFF → 删除 + X7/X8 标注</td></tr>
+    <tr><td><b>快照</b></td><td>reports/ 是历史报告，只进不出，不回写契约（历史就是历史）</td><td>不动；本报告同样定位为快照</td></tr>
+  </table>
+
+  <h3>4.2 实测的交叉引用（谁在引用谁，合并后怎么变）</h3>
+  <table>
+    <tr><th>引用方</th><th>被引方</th><th>引用点</th><th style="width:150px">合并后处置</th></tr>
+    <tr><td>WORKFLOW §0 / 规则 6 / 义务 7 / §6</td><td>COLLABORATOR_MODEL</td><td>4 处文件名引用</td><td>W2–W6 改指“本文件 §7”</td></tr>
+    <tr><td>COLLABORATOR_MODEL 头部</td><td>WORKFLOW</td><td>“§2 规则 5 与 §4 义务 7”（编号错位，实为规则 6）</td><td>W8 章节头修正</td></tr>
+    <tr><td>decisions/016</td><td>COLLABORATOR_MODEL A8</td><td>见 X1</td><td>改指 WORKFLOW §7 A8</td></tr>
+    <tr><td>decisions/033</td><td>“WORKFLOW §4.1”</td><td>实指内核契约 §4.1（原引用就指错了）</td><td>X2 改指内核契约</td></tr>
+    <tr><td>selftest-memory-sampler / preset-mount / plugin-contract</td><td>COLLABORATOR_MODEL §E-12</td><td>脚本头注释（外部锚点）</td><td>X3–X5 改指 WORKFLOW §7 §E-12</td></tr>
+    <tr><td>experience/2026-09-19-1400</td><td>COLLABORATOR_MODEL §E-8</td><td>正文引用（外部锚点）</td><td>X6 改指 WORKFLOW §7 §E-8</td></tr>
+    <tr><td>experience/2026-09-18-0100、2026-09-17</td><td>HANDOFF-lh-practice启动事故.md</td><td>交接文件指向</td><td>X7 / X8 标注“已删除，git 历史可查”</td></tr>
+  </table>
+  <p class="note">两个被外部锚定的编号：<b>§E-8</b>（稳定标识）与 <b>§E-12</b>——合并后它们的编号必须一字不动，只能跟着搬进 §7。</p>
+</section>
+
+<section id="s5">
+  <h2>5 · 文档对项目实现的指导影响</h2>
+  <p>这套文档不是“说明”，而是直接压在代码上的约束：内核契约决定五个核心对象长什么样，ADR 决定每个插件的边界，PLUGIN_CONTRACT 决定每一行注册代码怎么写。反向看，文档里的每条规则都能指到具体插件/脚本。</p>
+
+  <h3>5.1 对内核设计（五概念）的指导影响</h3>
+  <table>
+    <tr><th style="width:110px">内核概念</th><th>文档如何指导设计</th><th>落到的代码</th><th>契约红线</th></tr>
+    <tr><td><b>节点</b>（课程树）<br><span class="note">内核契约 §2.1</span></td><td>树不是静态结构，而是<b>事件的投影</b>（ADR-032）——增删节点都要可回放</td><td>lh-course-tree / lh-course-ui</td><td>插槽注册 list 型给 id（§二 2.3）；挂载行坐 isolate 组（§五之六）</td></tr>
+    <tr><td><b>事件</b><br><span class="note">§2.2 + §3 词汇表</span></td><td>信封起步字段（ADR-012）、四类划分、<b>不抄内容只存引用</b>（ADR-014）；User 侧四元组 / Agent 侧 tracing 两套词汇分开</td><td>lh-event-store / lh-recorder-trace</td><td>原子写 + 读容忍 BOM（§五）；apply() 绝不抛错（§五之二）</td></tr>
+    <tr><td><b>投影</b><br><span class="note">§2.3</span></td><td><b>事实归内核、解释归插件</b>（ADR-002）：断言是插件产出、带出处/置信度/可推翻（§4.1 语法）；旁路观测异步绝不抛（ADR-034）</td><td>lh-asserter</td><td>返回值带纠错信息（ADR-026 决定 5）；自动触发三重护栏</td></tr>
+    <tr><td><b>Handoff</b>（交接）<br><span class="note">§2.4</span></td><td>交接是显式对象而不是口头传达；上下文中断时“不阻塞记录”（WORKFLOW 规则 5）</td><td>WORKFLOW §5 熔断机制（文档层）</td><td>单一上下文；一次交付 ≤3 个待回应项</td></tr>
+    <tr><td><b>Agent 注册表</b><br><span class="note">§2.5</span></td><td>工具是 LH 生态的、不是个人的（ADR-015）；基础能力分两批挂（ADR-030）</td><td>lh-practice 等全部工具插件</td><td>工具 schema 只用 8 个关键字（§一 1.2）；lh 自我描述与实现一致（§五之七）</td></tr>
+  </table>
+
+  <h3>5.2 对宿主（dsh / Cordis）集成的指导影响</h3>
+  <div class="cards">
+    <div class="card"><b>寄生而不 fork（ADR-001/011/023）</b><span class="m">LH 全部能力以插件形态挂进 dsh；版本控制只覆盖自己的目录。这决定了 PLUGIN_CONTRACT §一/§二的 schema 只能是“宿主注册 schema 的子集用法”，不能发明字段。</span></div>
+    <div class="card"><b>inject = 服务名（§一 1.1）</b><span class="m">ctx 依赖声明写 Cordis 服务名而非包名——写错的典型后果是“起不来形态 ①”。由 check-plugin-contract + check-client-inject 把守。</span></div>
+    <div class="card"><b>包名 + file:（§三 / 约束 13）</b><span class="m">pnpm 对 file: 目录是“拷贝快照”不是软链：仓库根软链即改即生效，profile 里是拷贝必须 sync-lh-deps。跨插件引用禁用相对路径。</span></div>
+    <div class="card"><b>apply() 绝不抛错（§五之二 / ADR-025）</b><span class="m">装载期错误=整个宿主起不来。没配好就降级 + 在返回值里说明，而不是抛。由 check-profile-apply 假 ctx 真跑 apply 验证。</span></div>
+    <div class="card"><b>isolate 组与 realm（§五之六）</b><span class="m">provide 东西的 preset 行必须坐 isolate 组，只注册工具的行不硬套。写错=挂载时被宿主拒（check-preset-mount 只能覆盖 0 行与宿主包存在，其余靠真会话）。</span></div>
+    <div class="card"><b>env 惰性（§四）</b><span class="m">环境变量在 apply() 里惰性求值，保证 profile 移植/隔离开发（ADR-031）时不固化错值。</span></div>
+  </div>
+
+  <h3>5.3 开发一个新插件时，文档依次怎么指导你（管线视角）</h3>
+  <div class="tree">① LH内核契约      → 你要操作的概念是什么（节点/事件/投影…）、词汇怎么用（四元组/tracing）
+      ↓
+② decisions/      → 这个功能的边界有没有被 ADR 决过（先查 001–034，避免重新发明已被否定的方案）
+      ↓
+③ PLUGIN_CONTRACT → 注册代码逐条怎么写（§一/§二 schema，按需查对应小节，不必通读）
+      ↓
+④ check-all.mjs   → 机器验收：全绿为准（12 个闸门 + 5 个自测）
+      ↓
+⑤ §七清单人工项   → 机器查不到的 16 条自查（真会话看工具清单、语义规则、流程项）
+      ↓
+⑥ WORKFLOW §2/§4  → 交付形式（单一上下文、≤3 待回应项、破坏性白名单）与义务
+      ↓
+⑦ experience/     → 动手前翻一眼前车之鉴（四次“起不来”、shell 写坏文本×4、竞态…）</div>
+
+  <h3>5.4 对质量保障体系的指导影响（机器与人工的分界）</h3>
+  <table>
+    <tr><th>把守方</th><th>覆盖什么</th><th>依据</th></tr>
+    <tr><td><span class="badge b-green">机器</span> 12 个 check-*</td><td>apply/name 导出、相对路径违例、env 固化、客户端 inject、list 型 id、exports 字段、lh 自我描述、files 清单、schema 8 关键字、preset 挂载、安装拷贝一致性、文本编码、重启体检（应然红）</td><td>PLUGIN_CONTRACT §八；check-all 统一调度（EXPECTED_RED 机制）</td></tr>
+    <tr><td><span class="badge b-amber">机器+人工</span></td><td>inject 声明齐全（机器）但“服务在所在层真的可用”（人工五问）；lh 声明与实现一致（机器核对字段）但语义效果（人工）</td><td>P2 的【闸门（部分）】标注</td></tr>
+    <tr><td><span class="badge b-gray">永远人工</span></td><td>真会话验证工具清单、返回值纠错信息、枚举如实回报、判定口径一致、约束放“每次组装都会出现”的位置（ADR-019 修订 10）</td><td>语义规则与流程项，机器替代不了</td></tr>
+    <tr><td><span class="badge b-blue">selftest ×5</span></td><td>闸门自身的可信度：“闸门先对着坏状态红过”才能信它的绿</td><td>C 组教训（“被布置成看不见 bug 的测试”）</td></tr>
+  </table>
+
+  <h3>5.5 对协作与治理的指导影响</h3>
+  <ul>
+    <li><b>第四条产品法律（ADR-011）是整个体系的“准绳”</b>：任何时刻必须存在用户可感知的完整闭环——它直接推导出“文档不得先于闭环扩张”（R1），也是本次删两条禁令的依据：限制讨论顺序并不会加速闭环，A5 断言已实证过。</li>
+    <li><b>WORKFLOW §2 六规则 + §4 七义务</b>约束 agent 的每一次交付：单一上下文、≤3 待回应项、可观察不设时限、破坏性白名单、不阻塞记录、反馈接收——本次合并后它们与 §7 行为准则成为同一份文档，不再互相漂移。</li>
+    <li><b>协作者模型（§7）是治理层的“自省装置”</b>：断言带出处/置信度/可推翻（内核契约 §4.1 语法），C 组错误台账强制 AI 留痕——它不是评价，是协作建模，且作者本人可随时推翻。</li>
+    <li><b>事件溯源式留痕贯穿文档体系</b>：代码有 events.jsonl，文档有 ADR + 修订记录 + 经验台账——任何一条现行规则都能回答“它是被哪次事故/决定推出来的”（出处可追溯），这就是删掉死条款、改正向表述时不会丢失历史的保证。</li>
+  </ul>
+</section>
+
+<section id="s6">
+  <h2>6 · 对各文档的修改参考意见</h2>
+  <p>每处给出【位置】【原文】【改为】三栏，用编辑器逐处手动替换即可。<b>改文本的纪律</b>（本项目踩过四次的坑，C12/C15/C21/C23）：只用编辑器或编辑工具改文本，<b>绝不用 PowerShell 的 <code>&gt;</code> / <code>Set-Content</code> / <code>Add-Content</code></b>——会写进 BOM 或把多字节字符写成 U+FFFD。改完后跑 <code>node scripts/check-all.mjs</code>，全绿为准。</p>
+
+  <h3 id="s6a">6.1 docs/ARCHITECTURE.md（6 处修改：R1–R6）</h3>
+
+  <h4>R1 头部：删"分层法律"，推论改正向 <span class="badge b-amber">位置：第 5–7 行</span></h4>
+  <p><b>原文</b>：</p>
+  <pre>&gt; 分层法律：第 N 层未书面冻结前，禁止讨论第 N+1 层。
+&gt; **产品法律（第四条，ADR-011）：任何时刻，必须存在一条用户可感知的完整闭环在运行。允许被冻结的层次，只能是这条闭环已经走过的层次。**
+&gt; 推论：文档不得先于闭环扩张。当"再想清楚一点"与"让最小闭环跑通"冲突时，后者优先。</pre>
+  <p><b>改为</b>：</p>
+  <pre>&gt; **产品法律（第四条，ADR-011）：任何时刻，必须存在一条用户可感知的完整闭环在运行。允许被冻结的层次，只能是这条闭环已经走过的层次。**
+&gt; 推论：文档不得先于闭环扩张——让最小闭环跑通，永远优先于"再想清楚一点"。讨论与冻结的顺序跟随闭环走到哪一层，不设讨论禁区。</pre>
+  <p class="note">产品法律一行原样保留，只删禁令行、推论改成正向表述。</p>
+
+  <h4>R2 约束 13：pnpm 对照表压缩去重 <span class="badge b-amber">位置：约束 13 整条，约第 84–96 行</span></h4>
+  <p><b>原文</b>（整条替换）：</p>
+  <pre>13. **pnpm 对 `file:` 目录依赖是「拷贝快照」，不是软链；且目录名由包名派生。**
+    两处形态**必须分开记**（2026-09-18 更正，此前这里写的是"工作区根那边是软链、改源码立即生效"，
+    那句话**是错的**，而且错得贵——它让"改了没生效"失去了怀疑对象）：
+
+    | 位置 | 形态 | 改源码后 |
+    |---|---|---|
+    | 仓库根 `node_modules/@lh/x` | **workspace 软链** → `plugins/lh-x`（需 `pnpm-workspace.yaml` + `workspace:*`） | 立即生效 |
+    | profile `node_modules/@lh/x` | **真实目录，拷贝**（`nodeLinker: hoisted`） | **不动，必须同步** |
+
+    因此：包内**不能用相对路径引用别的插件**（`../lh-xxx/…` 会解析成不存在的 `@lh/lh-xxx/`），
+    必须包名 + `file:` 依赖声明。
+    查：`scripts/check-installed-copies.mjs`；修：`scripts/sync-lh-deps.mjs`。
+    **不要用 `pnpm install` 同步**：规格没变它认为"已是最新"直接跳过。</pre>
+  <p><b>改为</b>：</p>
+  <pre>13. **pnpm 对 `file:` 目录依赖是「拷贝快照」，不是软链；且目录名由包名派生**——
+    仓库根是 workspace 软链（改源码立即生效），profile 里是真实拷贝（改源码不动，必须同步）。
+    （2026-09-18 更正：此前这里写的是"工作区根那边是软链、改源码立即生效"，那句话**是错的**，
+    而且错得贵——它让"改了没生效"失去了怀疑对象。）
+    因此包内**不能用相对路径引用别的插件**，必须包名 + `file:` 依赖声明。
+    完整对照表与同步命令见 `PLUGIN_CONTRACT.md §五之四`（查 `check-installed-copies.mjs`、修 `sync-lh-deps.mjs`，
+    **不要用 `pnpm install` 同步**）。</pre>
+  <p class="note">保留"错得贵"教训句——它是防止复发的保护性内容；只把与 PLUGIN_CONTRACT §五之四逐字重复的表格换成一句指向。</p>
+
+  <h4>R3 约束 15：<b>不动</b> <span class="badge b-gray">无需修改</span></h4>
+  <p>它已是压缩版且含 ADR-025 教训（"拆掉警报器要补回来"），是保护性内容。</p>
+
+  <h4>R4 §5 标题去禁令 <span class="badge b-amber">位置：约第 189 行</span></h4>
+  <p><b>原文</b>：<code>## 5. 开放问题清单（上限 10 条，新窗口只允许从此取题）</code></p>
+  <p><b>改为</b>：<code>## 5. 开放问题清单</code></p>
+  <p class="note">§5 内部的"不阻塞规则"引言块<b>保留不动</b>，它本来就是正向表述。</p>
+
+  <h4>R5 §6 决策索引更新 <span class="badge b-amber">位置：约第 213–224 行</span></h4>
+  <p><b>原文</b>：</p>
+  <pre>## 6. 决策索引
+
+见 decisions/ 目录。修改决定必须走 ADR 写回流程，禁止重新开窗口从零讨论。
+
+| ADR | 标题 | 状态 |
+|---|---|---|
+| 001–007, 009 | （原有七条） | 有效 |
+| 008 | 内核先行，L3 冻结为愿景 | **已废止（ADR-011）**；L3 部分保留 |
+| 010 | 产品形式——开源 Web 应用，内核无头库 | **已修订（ADR-011）**；解耦与验证顺序保留 |
+| 011 | 宿主采用 dsh，内核自研终止 | 有效（含第四条法律） |
+
+**相关文档**：`WORKFLOW.md`（开发工作流，约束人的认知负担）、`LH内核契约-v0.1.md`（事件词汇表、四元组、断言与策略层的语法定义）。</pre>
+  <p><b>改为</b>：</p>
+  <pre>## 6. 决策索引
+
+完整索引见 `decisions/` 目录（**001–034**，各自带状态与失效信号）。修改决定必须走 ADR 写回流程，不要从零重开讨论。
+历史状态备注：008 已废止（ADR-011，L3 部分保留）；010 已修订（ADR-011）。其余均有效。
+
+**相关文档**：`WORKFLOW.md`（开发与协作规范，含协作者模型）、`PLUGIN_CONTRACT.md`（插件注册 schema 与闸门）、`LH内核契约-v0.1.md`（事件词汇表、四元组、断言与策略层的语法定义）。</pre>
+
+  <h4>R6 宿主约束清单加权威出处声明 <span class="badge b-amber">位置：约第 57 行</span></h4>
+  <p><b>原文</b>：<code>**已确认的宿主约束（写在这里省得重查）**：</code></p>
+  <p><b>改为</b>：</p>
+  <pre>**已确认的宿主约束（写在这里省得重查）**：
+
+&gt; 本清单是速查摘要；**规则的权威出处是 `PLUGIN_CONTRACT.md`**（含报错原文、闸门与修法），冲突时以它为准。</pre>
+
+  <h3 id="s6b">6.2 docs/PLUGIN_CONTRACT.md（2 处修改：P1–P2）</h3>
+
+  <h4>P1 §零"阅读仪式"软化为"闸门跑绿" <span class="badge b-amber">位置：第 8–9 行</span></h4>
+  <p><b>原文</b>：</p>
+  <pre>&gt; **所以它的用法是**：写之前先读第一、二节；写完之后用第七节的清单自查；
+&gt; review 别人（或另一个 agent）写的插件时，逐条对照。</pre>
+  <p><b>改为</b>：</p>
+  <pre>&gt; **所以它的用法是**：写完后跑 `node scripts/check-all.mjs`，全绿为准——机器查不到的部分，
+&gt; 再用第七节的清单人工自查（每条已标注把守它的闸门）；review 别人（或另一个 agent）写的插件时同理。
+&gt; 写之前按需查阅第一、二节对应小节，不必通读。</pre>
+
+  <h4>P2 §七整节重写：28 条全保留，逐条标注闸门 <span class="badge b-red">位置：约第 462–503 行，整节替换</span></h4>
+  <p><b>原文</b>：现行 <code>## 七、Review 清单…</code> 整节（28 个 <code>- [ ]</code> 条目）。<b>改为</b>（以下全文替换该节）：</p>
+  <pre>## 七、Review 清单（写完自查 / 审别人的插件）
+
+**每条后面标注了把守它的闸门**：【闸门：xxx】= `node scripts/check-all.mjs` 自动覆盖；【人工】= 机器查不到，必须自查。
+人工项不是"次要项"——致命级里的人工项同样能让 dsh 起不来。
+
+**致命级（会让 dsh 起不来或功能静默缺失）**
+
+- [ ] 服务端：导出了 `name` 与 `apply`【闸门：check-plugin-contract】
+- [ ] 服务端：**`apply()` 不会因为"没配好"而抛错**（见 §五之二）【闸门：check-profile-apply】
+- [ ] 服务端：`inject` 里的服务名**在它所在的层真的可用**【闸门（部分）：check-plugin-contract 查"访问的服务都声明了 inject"；"所在层可用"归 §六五问，人工】
+- [ ] 服务端：**跨插件引用用包名**，且被引用方有 `package.json`、引用方声明了 `file:` 依赖【闸门：check-plugin-imports】
+- [ ] 服务端：`package.json` 有 `files`，且**每一个运行时文件都在里面**（见 §五之三）【闸门：check-plugin-contract】
+- [ ] 路径：**没有从"模块位置往上找仓库根"来定位数据目录**——
+      装进 profile 后那条路必然失败；走 `lh-install.json` 或环境变量（见 §五之五）【闸门：check-paths-resolution、check-hardcoded-paths】
+- [ ] 客户端：**导出了 `exports.inject`**（不是只写在 package.json）【闸门：check-client-inject】
+- [ ] 客户端：每个 `ctx.<服务>` 都在 `exports.inject` 里【闸门：check-client-inject】
+- [ ] 客户端：`package.json` 的 `exports` 含 `"./client"` 与 `"./package.json"`【闸门：check-plugin-contract】
+- [ ] 插槽注册：list 型**给了 `id`**【闸门：check-plugin-contract】
+- [ ] 工具 schema：只用了那 8 个关键字；`required` 是根级数组【闸门：check-preset-mount】
+- [ ] 输出 schema：可能为 `null` 的字段写成 `oneOf: [type, 'null']`【人工：无闸门；注册后真跑一次工具看输出校验】
+- [ ] HTTP 路由：`(kind, path)` 不与已有路由重复【人工：重复时宿主注册抛错会暴露】
+- [ ] **`package.json` 有 `lh` 自我描述**，且 `provides.tools` / `inject` 与实现一致（见 §五之七）【闸门：check-plugin-contract】
+- [ ] **（组合文件）** `provide` 东西的行坐在带 `isolate` 的组里；只注册工具的行不要硬套组（见 §五之六）【人工：check-preset-mount 只覆盖 0 行与宿主包存在；组/realm 挂载时被宿主拒】
+- [ ] **（组合文件）** 加行前有备份、闸门绿、且闸门自己对着坏状态红过【人工（流程）："闸门先红过"由 selftest-* 证明】
+- [ ] **（组合文件）** 加行后**在真会话里**看过一次工具清单（发一句"你能用哪些工具"）【人工：机器替代不了真会话】
+
+**严重级（功能不可用/数据风险）**
+
+- [ ] 环境变量惰性求值【闸门：check-plugin-contract】
+- [ ] 写文件用原子替换；读文件容忍 BOM【人工：离线断言覆盖；check-text-encoding 只查 BOM/U+FFFD 存在】
+- [ ] 破坏性操作只做白名单，且先备份【人工（流程）：见 `WORKFLOW.md §2` 规则 4】
+- [ ] **改完源码跑过 `sync-lh-deps.mjs`**，且 `check-installed-copies.mjs` 是绿的
+      （否则"测过的"和"要跑的"不是同一份代码）【闸门：check-installed-copies】
+- [ ] 工具/中间件的**返回值里带纠错信息**（被忽略的字段名、可用值），别让调用方瞎猜（§一.2、ADR-026 决定 5）【人工：语义规则】
+- [ ] 写入的字段**不是"声明了却不生效"的**（那比没有这个字段更糟：调用方以为生效了）【闸门（部分）：check-plugin-contract 核对 `lh` 声明与实现；其余人工】
+- [ ] 处理"模型/外部输入的枚举值"时，**认不出的如实回报**而不是静默丢弃或抛错（ADR-019 决定 4、ADR-021 结论七）【人工：语义规则】
+
+**一般级**
+
+- [ ] 边界情况有断言（空输入、缺字段、超大输入）【人工：离线自测】
+- [ ] `render` 不把大内容塞进对话（实测踩过：8,400 tokens 每轮重发）【人工】
+- [ ] 判定器/断言的口径与它要衡量的东西一致（**不写死"当时的数量"**）【人工】
+- [ ] **改动会让"行为选择"出错时（用哪个工具/走哪条路），约束放在"每次组装都会出现"的位置**，
+      而不是某个工具的描述里（实测：写在描述里的规则被忽略两轮 —— ADR-019 修订 10）【人工】</pre>
+  <p class="note">标注依据：<code>check-plugin-contract.mjs</code> 机械覆盖 apply/name 导出、相对路径引用、env 固化、客户端 load/inject、list 插槽 id、exports 字段、<code>lh</code> 自我描述、files 清单；其余闸门见 §八。<b>共 28 条：机器全/部分覆盖 12 条，人工 16 条。</b></p>
+
+  <h3 id="s6c">6.3 docs/WORKFLOW.md —— 合并 COLLABORATOR_MODEL.md（9 处修改：W1–W9）</h3>
+
+  <h4>W1 标题 <span class="badge b-amber">位置：第 1 行</span></h4>
+  <p><b>原文</b>：<code># LH 开发工作流（v0.4）</code></p>
+  <p><b>改为</b>：<code># LH 开发与协作规范（v0.5）</code></p>
+
+  <h4>W2–W7：六处引用改写 <span class="badge b-amber">位置：第 16 / 108 / 110 / 164 / 199 / 249 行</span></h4>
+  <table>
+    <tr><th style="width:44px">#</th><th style="width:120px">位置</th><th>原文</th><th>改为</th></tr>
+    <tr><td>W2</td><td>第 16 行</td><td><code>写在 `COLLABORATOR_MODEL.md`，可看、可反驳。**</code></td><td><code>写在本文件 §7「协作者模型」，可看、可反驳。**</code></td></tr>
+    <tr><td>W3</td><td>规则 6 表格，约第 108 行</td><td>表头行结尾的 <code>| `docs/COLLABORATOR_MODEL.md` |</code></td><td><code>| 本文件 §7「协作者模型」 |</code></td></tr>
+    <tr><td>W4</td><td>约第 110 行</td><td><code>**必须写进 `docs/COLLABORATOR_MODEL.md` 并给出证据**</code></td><td><code>**必须写进本文件 §7 并给出证据**</code></td></tr>
+    <tr><td>W5</td><td>义务 7，约第 164 行</td><td><code>落在 `COLLABORATOR_MODEL.md`；感知变化必须留痕</code></td><td><code>落在本文件 §7；感知变化必须留痕</code></td></tr>
+    <tr><td>W6</td><td>§6 结尾，约第 199 行</td><td><code>`COLLABORATOR_MODEL.md` 是这套东西第一次真正跑起来的地方</code></td><td><code>§7 的协作者模型是这套东西第一次真正跑起来的地方</code></td></tr>
+    <tr><td>W7</td><td>约第 249 行</td><td><code>**状态**：v0.4 为当前有效版本（草案，随实践修订）。</code></td><td><code>**状态**：v0.5 为当前有效版本（草案，随实践修订）。</code></td></tr>
+  </table>
+
+  <h4>W8 大插入：新增 §7「协作者模型」 <span class="badge b-red">位置："---"与"## 修订记录"之间</span></h4>
+  <p>在 <code>## 修订记录</code> 标题前插入以下新章节。<b>主体内容 = <code>docs/COLLABORATOR_MODEL.md</code> 第 12–228 行原样搬入</b>（A1–A9、B1–B18、C1–C23、D1–D7、§E 1–18、更新记录表全部保留，<b>§E 的编号一律不动</b>——外部脚本注释引用了 §E-8 与 §E-12），只需做下面 4 个小改动：</p>
+  <p><b>① 章节头用这段新写的</b>（替代 COLLABORATOR_MODEL 的第 1–8 行，修正了原文的引用错位——它写"规则 5"实际是规则 6）：</p>
+  <pre>## 7. 协作者模型（断言集）
+
+&gt; 本节不是评价，是**断言集**。格式直接取自 `LH内核契约-v0.1.md §4.1`：
+&gt; 每条带**出处**、**置信度**、**可推翻条件**。作者可随时反驳或推翻任一条；反驳本身是有效证据，会改变这里的置信度。
+&gt; 维护规则见本文件 §2 规则 6 与 §4 义务 7：感知变化必须留痕，不许静默调整行为。
+&gt;
+&gt; **这不是对"这个人"的总体评价**，而是对"跟他一起做这个项目时该怎么协作"的建模。它只覆盖与协作相关的部分，且只覆盖有证据的部分。
+&gt; 置信度刻度：**高** = 有直接陈述或多次一致观察；**中** = 从行为推断；**低** = 单次观察，待验证。</pre>
+  <p><b>② 标题层级整体降一级</b>（让 §7 的内部小节不与 WORKFLOW 的 §0–§6 平级）：<code>## A.</code> <code>## B.</code> <code>## C.</code> <code>## D.</code> <code>## E.</code> <code>## 更新记录</code> → <code>### A.</code> <code>### B.</code> <code>### C.</code> <code>### D.</code> <code>### E.</code> <code>### §7 更新记录</code>；<code>### A1.</code>…<code>### A9.</code> → <code>#### A1.</code>…<code>#### A9.</code>（共 15 行标题，正文一字不动）。</p>
+  <p><b>③ A5 的证据行</b>末尾追加一句（它的两条证据已被本次精简移除，标注一下防止后人困惑）：</p>
+  <pre>（这两条禁令已于 2026-09-22 契约精简中移除——正是本条断言的实践后果。）</pre>
+  <p><b>④ 更新记录表</b>（原 <code>## 更新记录</code>）的<b>触发列里</b> <code>WORKFLOW.md</code> §2 规则 6 等历史字句<b>原样保留</b>——那是历史记录，不改。</p>
+
+  <h4>W9 修订记录补 v0.5 条目 + 修正编号漂移 <span class="badge b-amber">位置："## 修订记录"标题之后</span></h4>
+  <p><b>原文</b>（约第 205–214 行）：</p>
+  <pre>### v0.3.1 → v0.4（2026-09-16）
+
+**触发**：一次真实的数据破坏——AI 用启发式判据清理"自己的"数据，删掉了作者的真实记录。
+
+| v0.3.1 | v0.4 | 理由 |
+|---|---|---|
+| 无 | 新增 §2 规则 5「破坏性操作一律白名单」 | 删除类操作的判据必须是稳定标识；要先报告、先备份、一次只做一件事 |
+| §2「反馈接收」 | 顺延为规则 6 | 编号让位 |
+
+同时把标题改为 v0.4。</pre>
+  <p><b>改为</b>：</p>
+  <pre>### v0.4 → v0.5（2026-09-22）
+
+**触发**：全量契约审查。`COLLABORATOR_MODEL.md` 与本文件重复且引用编号已漂移（它头部写"§2 规则 5"，实际是规则 6），
+经作者决定**合并为一份**：协作者模型（断言集 A–E）并入本文件 §7，原文件删除。标题随之改为「开发与协作规范」。
+
+&gt; 注：§2 规则编号在 v0.4 插入规则后重排过（现行：规则 4=破坏性白名单、规则 5=不阻塞记录、规则 6=反馈接收）。
+&gt; 下面各历史修订条目里的规则编号是当时的编号，以正文为准。
+
+### v0.3.1 → v0.4（2026-09-16）
+
+**触发**：一次真实的数据破坏——AI 用启发式判据清理"自己的"数据，删掉了作者的真实记录。
+
+| v0.3.1 | v0.4 | 理由 |
+|---|---|---|
+| 无 | 新增 §2 规则「破坏性操作一律白名单」（插入后实际编号 4；原记为规则 5） | 删除类操作的判据必须是稳定标识；要先报告、先备份、一次只做一件事 |
+| §2「反馈接收」 | 顺延为规则 6 | 编号让位 |
+
+同时把标题改为 v0.4。</pre>
+
+  <h3 id="s6d">6.4 LH内核契约-v0.1.md（4 处标注：K1–K4，仓库根目录）</h3>
+
+  <h4>K1 §4.3 标题与正文 <span class="badge b-amber">位置：约第 186–188 行</span></h4>
+  <p><b>原文</b>：</p>
+  <pre>### 4.3 待决：知识点体系
+
+四元组证据的落脚点（topics 指向什么）尚未定案：从用户资料自动抽取 / 用户自建 / 混合。这决定分类器把证据挂到哪。</pre>
+  <p><b>改为</b>：</p>
+  <pre>### 4.3 知识点体系（部分已决）
+
+四元组证据的落脚点（topics 指向什么）：**ADR-021 结论七已定两轴封闭词表**（题型 17 项 + 领域 5 项）；
+topics 的来源（从用户资料自动抽取 / 用户自建 / 混合）与加词流程仍未定案（见 §9 第 4 项）。</pre>
+
+  <h4>K2–K4 §9 待决清单三处标注 <span class="badge b-amber">位置：约第 332 / 334 / 335 行</span></h4>
+  <table>
+    <tr><th style="width:44px">#</th><th>原文</th><th>改为</th></tr>
+    <tr><td>K2</td><td><code>2. **事件存储选型**：追加日志的物理实现（文件 / SQLite / 专用库）、索引方案（按 topic / scope / 时间的点查 + 否定式查询）。</code></td><td><code>2. **事件存储选型**：**已决（ADR-012）：JSONL 追加日志**（`data/events.jsonl`，`lh-event-store` 已跑）。索引方案（按 topic / scope / 时间的点查 + 否定式查询）仍开放。</code></td></tr>
+    <tr><td>K3</td><td><code>4. **知识点体系**：topics 的来源（资料自动抽取 / 用户自建 / 混合）……图谱内容需抽取或自建。</code></td><td>句尾追加：<code>（**部分已决：ADR-021 结论七两轴封闭词表**；加词流程仍开放，见 `ARCHITECTURE.md §5` 第 7 条。）</code></td></tr>
+    <tr><td>K4</td><td><code>5. **LLM 服务抽象**：多模型适配、成本计量（dsh 式 token 透明）、便宜模型起步的默认配置。</code></td><td><code>5. **LLM 服务抽象**：**已做（ADR-016）：`lh-model-tier` 档位中间件**（档位→模型候选链，已实测真调用）。成本计量与默认配置随实践补。</code></td></tr>
+  </table>
+
+  <h3 id="s6e">6.5 交叉引用修正（8 处小改：X1–X8）</h3>
+  <p>改完 6.3 的合并后，这些引用要跟着改，否则指向消失的文件：</p>
+  <table>
+    <tr><th style="width:44px">#</th><th>文件</th><th>原文</th><th>改为</th></tr>
+    <tr><td>X1</td><td><code>docs/decisions/016-模型档位建议而非要求.md</code> 第 4 行</td><td><code>见 `docs/COLLABORATOR_MODEL.md` A8）</code></td><td><code>见 `docs/WORKFLOW.md §7` A8）</code></td></tr>
+    <tr><td>X2</td><td><code>docs/decisions/033-断言器插件化与传递路径声明.md</code> 第 6 行</td><td><code>`WORKFLOW.md §4.1`（断言带出处、可争议）</code></td><td><code>`LH内核契约-v0.1.md §4.1`（断言带出处、可争议）</code>（原引用本就指错文件）</td></tr>
+    <tr><td>X3</td><td><code>scripts/selftest-memory-sampler.mjs</code> 第 5 行</td><td><code>`COLLABORATOR_MODEL §E-12`</code></td><td><code>`WORKFLOW.md §7 §E-12`</code></td></tr>
+    <tr><td>X4</td><td><code>scripts/selftest-preset-mount.mjs</code> 第 5 行</td><td><code>`COLLABORATOR_MODEL §E-12`</code></td><td><code>`WORKFLOW.md §7 §E-12`</code></td></tr>
+    <tr><td>X5</td><td><code>scripts/selftest-plugin-contract.mjs</code> 第 5 行</td><td><code>`COLLABORATOR_MODEL §E-12`</code></td><td><code>`WORKFLOW.md §7 §E-12`</code></td></tr>
+    <tr><td>X6</td><td><code>docs/experience/插件开发者/2026-09-19-1400-产物没有稳定标识等于没产出.md</code> 第 31 行</td><td><code>`PLUGIN_CONTRACT.md §五` 与 `COLLABORATOR_MODEL §E-8` 都写着</code></td><td><code>`PLUGIN_CONTRACT.md §五` 与 `WORKFLOW.md §7 §E-8` 都写着</code></td></tr>
+    <tr><td>X7</td><td><code>docs/experience/插件开发者/2026-09-18-0100-让dsh起不来的三次事故.md</code> 第 204 行</td><td><code>| 交接文件 | `docs/HANDOFF-lh-practice启动事故.md` |</code></td><td><code>| 交接文件 | `docs/HANDOFF-lh-practice启动事故.md`（已删除，git 历史可查） |</code></td></tr>
+    <tr><td>X8</td><td><code>docs/experience/插件开发者/2026-09-17-题库对象与接口.md</code> 第 737 行</td><td>…<code>`docs/HANDOFF-lh-practice启动事故.md`（写给"对话可能中断"的情形，事故修复后仍保留作为记录）</code>…</td><td>括号内改为 <code>已删除，git 历史可查</code></td></tr>
+  </table>
+  <p class="note"><b>不改</b>：<code>reports/</code> 下的历史项目报告（历史快照）；<code>decisions/030</code>、<code>audit-pilot-provenance.mjs</code>、<code>patch-bank-topics.mjs</code> 里对"规则 4"的引用（与正文一致，合法）。</p>
+
+  <h3 id="s6f">6.6 删除文件（2 个）</h3>
+  <table>
+    <tr><th>文件</th><th>理由</th></tr>
+    <tr><td><code>docs/COLLABORATOR_MODEL.md</code></td><td>已并入 WORKFLOW §7（<b>先做 6.3 的 W8，确认搬完再删</b>）</td></tr>
+    <tr><td><code>docs/HANDOFF-lh-practice启动事故.md</code></td><td>一次性事故交接，已过期；git 历史可查（X7/X8 已标注）</td></tr>
+  </table>
+</section>
+
+<section id="s7">
+  <h2>7 · 改完后的自检</h2>
+  <ol>
+    <li><code>node scripts/check-all.mjs</code> —— 全绿为准（<code>check-restart</code> 的红是“应然红”，EXPECTED_RED）。</li>
+    <li>全仓 grep <code>COLLABORATOR_MODEL</code> —— 应只剩 0 处（或只剩本报告里的历史记录）。</li>
+    <li>全仓 grep <code>HANDOFF-lh-practice</code> —— 应只剩 X7/X8 两处且都带“已删除”标注。</li>
+    <li>grep <code>规则 5</code> —— 核对 WORKFLOW 中不再有把“破坏性白名单”叫规则 5 的活文本。</li>
+    <li>抽查 WORKFLOW §7 的 §E-8、§E-12 编号与合并前一致（外部注释锚定这两个编号）。</li>
+  </ol>
+</section>
+
+<section id="s8">
+  <h2>8 · 记录在案的观察（本次未动，供以后参考）</h2>
+  <ul>
+    <li>§E 行为准则与 WORKFLOW 规则、PLUGIN_CONTRACT 严重级仍有<b>条目级</b>语义重复（如“白名单”出现 3 处）。本次处理的是<b>文件级</b>重复；条目级去重（同规则只留一处、其余引用）可在下次修订做，但会牵动 §E 编号，需一并改 3 个 selftest 注释。</li>
+    <li><code>LH内核契约-v0.1.md</code> 在仓库根而不在 <code>docs/</code>。移动它会牵动至少 6 处引用，本次未动；若要移，单独做一次。</li>
+    <li>WORKFLOW 修订记录的编号漂移已在 W9 用“注”的方式交代，历史条目本身不改写（历史就是历史）。</li>
+    <li>skills-draft 的 host-compat 兼容清单与 PLUGIN_CONTRACT 内容有重叠，但它面向“对外输出”，等技能包定稿时再对齐。</li>
+  </ul>
+</section>
+
+<footer>
+  LearningHarness v0.1 · 契约精简与优化审查报告 · 2026-09-22 · 本报告是快照，不回写契约（历史就是历史）
+</footer>
+
+</main>
+<script>
+  // 滚动进度条
+  const bar = document.getElementById('progress');
+  addEventListener('scroll', () => {
+    const h = document.documentElement;
+    bar.style.width = (h.scrollTop / (h.scrollHeight - h.clientHeight) * 100) + '%';
+  }, {passive:true});
+  // 目录高亮
+  const links = [...document.querySelectorAll('nav.side a')];
+  const targets = links.map(a => document.querySelector(a.getAttribute('href'))).filter(Boolean);
+  const obs = new IntersectionObserver(es => {
+    es.forEach(e => {
+      if (!e.isIntersecting) return;
+      links.forEach(a => a.classList.toggle('on', a.getAttribute('href') === '#' + e.target.id));
+    });
+  }, {rootMargin:'-10% 0px -80% 0px'});
+    targets.forEach(t => obs.observe(t));
+  // 主题切换
+  const tb = document.getElementById('themeBtn');
+  const saved = localStorage.getItem('lh-theme');
+  if (saved) document.documentElement.dataset.theme = saved;
+  tb.onclick = () => {
+    const next = document.documentElement.dataset.theme === 'dark' ? '' : 'dark';
+    if (next) document.documentElement.dataset.theme = next; else delete document.documentElement.dataset.theme;
+    localStorage.setItem('lh-theme', next);
+  };
+  // 点击代码块复制
+  document.querySelectorAll('pre').forEach(p => {
+    const t = document.createElement('span'); t.className = 'copied'; t.textContent = '已复制 ✓'; p.appendChild(t);
+    p.addEventListener('click', () => {
+      navigator.clipboard.writeText(p.innerText.replace(/\n已复制 ✓$/, '')).then(() => {
+        t.style.display = 'block'; setTimeout(() => t.style.display = 'none', 1200);
+      });
+    });
+  });
+</script>
+</body>
+</html>

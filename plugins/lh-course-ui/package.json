@@ -1,0 +1,54 @@
+{
+  "name": "@lh/course-ui",
+  "version": "0.0.1",
+  "private": true,
+  "description": "LH 的课程树界面：服务端半在 /lh/course 下注册三条只读路由（树 / 断言 / 传递边 / 最近），客户端半在侧栏放一个入口按钮、在 shell.overlay 上递归渲染课程树并做断言向上传递的动画。",
+  "type": "module",
+  "main": "index.js",
+  "exports": {
+    ".": {
+      "default": "./index.js"
+    },
+    "./client": {
+      "default": "./client.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "//dependencies": [
+    "用 file: 相对路径指向源码目录（PLUGIN_CONTRACT §3）。",
+    "本包会被 pnpm 装进 profiles/web/node_modules，那时相对 import 会断，",
+    "所以跨包引用只能用包名 + 显式依赖声明。",
+    "@lh/event-store：读事件日志（readEvents）。",
+    "@lh/course-tree：唯一树投影 buildTree —— 界面绝不自己再推一遍树。"
+  ],
+  "dependencies": {
+    "@lh/event-store": "file:../lh-event-store",
+    "@lh/course-tree": "file:../lh-course-tree"
+  },
+  "dsh": {
+    "client": {
+      "platform": "web",
+      "inject": [
+        "@deepseek-ai/dsh-client-runtime",
+        "@deepseek-ai/dsh-client-ui-slots"
+      ]
+    }
+  },
+  "files": [
+    "index.js",
+    "client.js"
+  ],
+  "lh": {
+    "kind": "ui",
+    "summary": "课程树界面：服务端半注册 /lh/course 三条只读路由（tree/assertions/recent），客户端半在 sidebar.footer.action 放入口按钮、在 shell.overlay 递归渲染课程树 + 高亮当前会话节点 + 断言向上传递动画",
+    "inject": ["webServer"],
+    "provides": {
+      "routes": ["/lh/course/tree", "/lh/course/assertions", "/lh/course/recent"],
+      "slots": ["sidebar.footer.action", "shell.overlay"],
+      "modules": ["@lh/course-ui/client"]
+    },
+    "depends_on": ["@lh/event-store", "@lh/course-tree"],
+    "loads_at": "profile",
+    "verified": { "gates": false, "live": false }
+  }
+}

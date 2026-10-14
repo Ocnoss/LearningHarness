@@ -1,0 +1,232 @@
+# dsh web profile 的用户 patch 层。
+# 本文件是一组 loader patch 条目（可做 id 定向的 config 覆盖、禁用、以及 insert 插入列表），
+# 在所有 bundle 层之后应用。
+
+# ── 开发期：打开服务端热重载 ──
+#
+# 为什么需要覆盖它：dsh-web-app 自带这一行
+#   # TODO: Re-enable shared HMR for Web after its reload lifecycle is tested.
+#   - id: hmr
+#     disabled: true
+# 也就是说上游自己在 web 下**关掉了**服务端 HMR，并把原因写成"重载生命周期尚未测试"。
+# 对一个正在开发插件的项目，代价是每次改服务端插件都要手动重启 dsh——实测一天里重启了十几次。
+#
+# 覆盖方式：id 定向的 config 覆盖（用户 patch 层在 bundle 层之后，所以生效）。
+# **注意**：id 定向的 patch 会整体替换该行的 config，不是深合并——
+# 所以要把要保留的字段一起写出来。
+#
+# 已知风险（诚实记录，不是免责声明）：
+# 上游既然写"生命周期尚未测试"，说明它可能有未发现的半重载状态。
+# 如果开发中发现诡异行为（插件已改但行为没变、或加载失败后整棵树处于怪状态），
+# 第一件事是**把这一行的 disabled 改回 true 并重启**，确认问题是否由它引起。
+#
+# 为什么还要给 config.root：`id` 定向的 patch 会**整体替换** config（不是深合并），
+# 而 dsh 的 boot 逻辑在"没有 hmr 实例"时会新建一个 `root: []` 的实例——
+# 那等于只监听 patch 文件、不监听插件源码，对开发没有帮助。
+# 这里显式给出源码根，让 HMR 能感知 LH 插件的改动。
+# ⚠ 临时置为 true（验证 inject:['subagents'] 无罪用）：
+#   之前“选 LH 弹回创造模式”疑为 HMR 半重载导致。关掉它 + 完全重启做对照——
+#   若 preset 能挂载则证明是 HMR 的锅、inject 无罪；验完再按需改回 false。
+- id: hmr
+  disabled: true
+  config:
+    root:
+      - 'D:/LearningHarnessv0.1/plugins'
+
+# ── LH 界面插件 ──
+#
+# 为什么必须有这一行（而不是把包装进 package.json 的 dsh.profile.bundles）：
+#   宿主发现客户端插件的方式是「扫描 Loader 的 entries，看哪个行的 name
+#   对应一个声明了 dsh.client 的包」（dsh-client-modules/lib/index.js:290,421）。
+#   而 bundle 层要求包声明 dsh.bundle.patch，@lh/theme 没有也不需要那个。
+#   所以它作为普通的插件行插入即可。
+#
+# 分工：
+#   - 这一行只负责「让服务端半加载」；
+#   - 界面代码在包的 exports["./client"] 里，由宿主投放给浏览器
+#     （/plugins/@lh/theme/client.js）。
+#   两者缺一不可：没有这一行，宿主根本不会去看那个包的客户端半。
+
+- insert:
+    - id: lh-theme
+      name: '@lh/theme'
+
+# ── LH 刷题界面 ──
+#
+# 一个包、两半：
+#   · 服务端半（index.js）注册两条 HTTP 路由给界面用：
+#       GET  /lh/practice/bank     题面（**刻意不含答案**）
+#       POST /lh/practice/attempt  判分与解析（复用 agent 工具走的同一条路径）
+#   · 客户端半（client.js）往 `sidebar.footer.action` 与 `shell.overlay` 注册 React 组件。
+#
+# 为什么走 HTTP 路由而不是 `ctx.remote`：remote 需要服务端包导出**构建期生成**的
+# `./typert` 契约，而生成器 `@deepseek-ai/dsh-typert-generator` 没有随发行版发布
+# （实测不存在）。手写生成文件去骗 loader 是在骗宿主，不做。
+# 宿主本来就提供 `ctx.webServer.register()`，用它是正当路径。
+#
+# 客户端 bundle 的投放是**宿主白拿的**：`dsh-client-modules` 会扫描 Loader 里
+# 声明了 `dsh.client` 的包，自动 servce `/plugins/@lh/practice/client.js`
+# 并把 boot 图注入 index.html。所以这一行只需要让服务端半加载。
+- insert:
+    - id: lh-practice
+      name: '@lh/practice'
+
+# ── LH 课程树界面（ADR-032/033 的可视化半）──
+#
+# 同样是一个包、两半：
+#   · 服务端半（index.js）在 /lh/course 前缀下注册三条**只读**路由：
+#       GET /lh/course/tree             整棵课程树（每节点带断言计数、绑定会话）
+#       GET /lh/course/assertions?scope= 某节点的断言事件 + 传递边（derived_from / propagate_to）
+#       GET /lh/course/recent?since=     某时刻之后的断言（面板轮询做"向上传递"动画）
+#   · 客户端半（client.js）往 sidebar.footer.action 放一个入口按钮、往 shell.overlay 放课程树面板。
+#
+# 路由前缀 /lh/course 与 practice 的 /lh/practice 不撞；两个 list 型插槽（sidebar.footer.action /
+# shell.overlay）都走 slots.inject 注册，对启动顺序免疫（practice 那次"Failed to load plugins"的教训）。
+# 树只有一处实现：服务端 import @lh/course-tree/tree 的 buildTree，界面绝不自己再推一遍。
+- insert:
+    - id: lh-course-ui
+      name: '@lh/course-ui'
+      # ⚠ 2026-10-08 起**退役**（作者："旧的页面不要了"）。
+      #
+      # 为什么退役：它是课程树的第一版界面，以**断言传递**为主角
+      # （面板标题写的就是「课程树 · 断言传递」，节点只在 assertion_count > 0 时
+      # 才显示「N 断言」徽章）。功能已被 @lh/workspace-ui 的课程目录完全盖过，
+      # 而两个课程界面同时在侧栏上，正是作者感觉"课程列表与断言系统耦合太深"的来源；
+      # 断言器按作者要求也已暂时关掉，它现在满屏皆空、更容易误导。
+      #
+      # 为什么用 disabled 而不是删掉这一行：包、路由、源码都还在，
+      # 想回头看第一版的传递动画时，把这一行改成 `disabled: false` 就行。
+      # 它的服务端半（/lh/course/*）与 workspace-ui 的 /lh/workspace/* 不冲突，留着无害。
+      disabled: true
+
+# ── LH 课程目录（课程与会话的管理面）──
+#
+# 同样是一个包、两半，但与 course-ui 的**入口形态不同**：
+#   · course-ui 走 `sidebar.footer.action`（侧栏底部按钮）+ `shell.overlay`（浮层）；
+#   · workspace-ui 走 `sidebar.panellist`（侧栏图标）+ `main` 槽（**中央面板**）。
+#
+# ⚠ 2026-10-08 起它**不再只读**（ADR-035）：服务端半给四条路由，
+#   一条读（GET /lh/workspace/tree）、三条写（POST /course|/rename|/bind）。
+#   写路由本身不做判断，它调 `@lh/course-tree/commands` —— 与 agent 工具**同一份代码**，
+#   所以"点按钮建的课"和"模型建的课"在事件日志里字节级同形。
+#   旧注释说"只读，写入仍走 agent 工具"，那句话在"只有对话一个入口"时成立，
+#   与"课程树视图用来管理会话"直接冲突，已按上面的分工改掉。
+#
+# ⚠ 这里装的是 **profiles/web**，而作者日常用的是 **desktop 宿主**（~/.dsh/profiles/desktop）。
+#   界面的真正落点在那里；这一份是浏览器路（`dsh web`）与闸门用的。见 ADR-035 §4。
+#
+# 为什么用 main 槽、以及为什么这是可行的（源码依据，不是猜）：
+#   · `main` 是 keyed 槽，分派按"当前选中的 panel id"：
+#       renderSlot("main", {}, { entryKey: usePanelInfo(i => i.activePanelId) ?? "conversation" })
+#   · `selectPanel` 只校验 live 注册表，**没有 id 白名单**：
+#       hasMainPanel = ctx.slots.entries("main").some(e => e.options.key === id)
+#   · 侧栏 `PanelRow` 的处理体就是 `selectPanel(id)`，而 panellist 的目录原文写明
+#     "Each list id addresses the matching main panel"。
+#   · 第一方先例：`plugins`、`schedules` 都是插件用同一公开 API 注册的
+#     （`main key: PANEL_ID` + `sidebar.panellist id: PANEL_ID`）。
+#   （以上行号出自 app.asar 内的宿主源码；本仓库内无先例，故这是 LH 的第一例。）
+#
+# ⚠ 两半必须**同时**注册：只注册 panellist 而 main 缺失时，
+#   `selectPanel` 会抛 `layout.selectPanel: main panel "lh" is not registered` 且不改选中态。
+#   所以该插件另留了一个 `shell.overlay` 兜底入口（仅当 main 没注册成功时才渲染）。
+- insert:
+    - id: lh-workspace-ui
+      name: '@lh/workspace-ui'
+
+# ── 关于 lh-practice 那次"dsh 起不来"的事故（记录，供以后对照）──
+#
+# 症状：启动时 `ERR_MODULE_NOT_FOUND: Cannot find module
+#   '…/profiles/web/node_modules/@lh/lh-question-bank/index.js'`，
+#   整棵插件树加载失败，**dsh 完全无法启动**。
+#
+# 根因：@lh/practice 的服务端半用了相对导入 `../lh-question-bank/index.js`。
+#   那个写法**只在源码目录成立**（plugins/ 下都是兄弟目录）。而 pnpm 把包装进
+#   `profiles/web/node_modules/@lh/practice` 时用的是**复制而非软链**，
+#   于是目录名由包名派生（`question-bank`），相对路径想找的 `@lh/lh-question-bank`
+#   **永远不存在**。
+#
+# 为什么离线测试全绿却没拦住：测试跑在**源码目录**、生产跑在**安装后的副本**里，
+#   两条路径的模块解析不同。测试恰好绕过了真实路径。
+#
+# 修法：把跨插件引用改成**包名**导入，并在各自的 package.json 里
+#   用 `file:` 声明依赖（@lh/practice → @lh/question-bank、@lh/event-store；
+#   @lh/question-bank → @lh/event-store）。pnpm 因而把依赖放在同级 node_modules 下。
+#
+# **同时补了闸门** `scripts/check-plugin-imports.mjs`：用 **profile 的解析上下文**
+#   import 每个已安装的 LH 包，失败就红。加/改插件后应当先跑它再重启。
+#
+# 致其他改动者：这个文件里 lh-practice 那行曾被临时加上 `disabled: true` 以恢复启动
+#   （处置正确）。依赖修好后已移除该行。
+
+# 已退役的行（保留说明，避免以后有人以为是漏了）：
+#   lh-ui-probe —— 开发期探针，问清"客户端插件能 require 到什么、ctx 上有哪些服务、
+#     插槽注册 API 长什么样"。它给出的关键答案：
+#       · seed 模块里有 react / react-dom / 104 个 UI 组件原语 / SlotCore / client-runtime；
+#       · 注册签名是 `ctx.slots.register(options, component)`；
+#       · **cordis 的 inject 门禁**：没声明 inject 就访问服务会抛
+#         `cannot get property "slots" without inject`（这条只能从运行时问到）；
+#       · `shell.overlay` 是官方的浮层插槽，在主动接收指针事件前是点击穿透的。
+#     答案拿到后即退役——探针留在 profile 里是长期噪声。
+
+# 更早退役的行（保留说明）：
+#   @lh/ui —— 最早的开发期探针，在左下角注入一个"LH"角标，
+#   用来验证"第三方客户端包能否被 dsh 投放并在浏览器执行"。答案是能。
+#   使命完成后删除，理由有二：
+#     1. 它验证过的链路已由 @lh/theme 持续证明（同样是一个第三方客户端包）；
+#     2. 它占的是宿主侧边栏的品牌槽位，是会显示给学习者看的位置，
+#        长期留一个开发期标记在上面不合适。
+#   需要再次验证"客户端包能否加载"时不必恢复它——直接看 @lh/theme 是否生效即可。
+
+# ── LH 学习日历（@lh/schedule-ui）──
+#
+# 一个包、两半：
+#   · 服务端半（index.js）在 /lh/schedule 前缀下注册五条路由：
+#       GET  /lh/schedule/health       自检（日志读不读得到、有多少条日程、今天是哪天）
+#       GET  /lh/schedule/calendar     月/周视图：计划（日程）+ 事实（哪段对话动过）+ 课程动作
+#       POST /lh/schedule/create       新建日程
+#       POST /lh/schedule/update       改期/改名/标记完成/绑课程/绑对话
+#       POST /lh/schedule/cancel       撤销（可恢复，可改回 planned）
+#   · 客户端半（client.js）往 main（key `lh-calendar`）与 sidebar.panellist（同名 id）注册日历面板。
+#
+# 为什么两半都要：宿主发现客户端插件的方式是"扫 Loader 的 entries，看哪个行的 name
+# 对应一个声明了 dsh.client 的包"（同 @lh/theme / @lh/practice / @lh/workspace-ui）。
+# 没有这一行，浏览器那半边根本不会被投放。
+#
+# 为什么写路由与 agent 工具是同一份代码：都调 @lh/schedule/commands ——
+# "在日历上点的"和"模型建的"日程，在事件日志里字节级同形（ADR-035 的分工）。
+#
+# ⚠ 这一行必须先有包再有行（否则导入不到 = 整棵插件树加载失败）。
+#   包由 scripts/install-lh-schedule.mjs 装好并逐字节校验过；
+#   要撤掉就把本行改成 disabled: true，或跑 --rollback 恢复组合文件。
+- insert:
+    - id: lh-schedule-ui
+      name: '@lh/schedule-ui'
+
+# ─────────────────────────────────────────────────────────────────────────────
+# LH 的题库管理（@lh/question-bank-ui）—— 学习界面
+#
+# 一个包、两半：
+#   · 服务端半（index.js）在 /lh/bank 前缀下注册七条路由：
+#       GET  /lh/bank/health      自检（工作区/日志读不读得到、几库几题、几条件答对上号）
+#       GET  /lh/bank/banks       题库清单（含已归档区）+ 全局合计
+#       GET  /lh/bank/source      选中库的「来源」段（库级：出处文件、抽取方式与模型、覆盖面）
+#       GET  /lh/bank/questions   选中库的「题目」段（分页 + 筛题干/知识点/题型/做过没做过）
+#       GET  /lh/bank/attempts    「记录」段（时间/作答/三态对错/来源/用时/关联会话）
+#       POST /lh/bank/archive     把题库移进 lh-questions/.archived/（可逆）
+#       POST /lh/bank/restore     把它移回来
+#   · 客户端半（client.js）往 main（key `lh-bank`）与 sidebar.panellist（同名 id）注册面板。
+#
+# 为什么它在 **profile 层**：界面插件 inject `webServer`，而 preset 是 agent 作用域，
+# 够不着 host 面服务（契约 §一.1）；而且宿主发现客户端插件的方式是"扫 Loader 的 entries，
+# 看哪个行的 name 对应一个声明了 dsh.client 的包"——没有这一行，浏览器那半边根本不会被投放。
+#
+# 为什么它只读 + 两个可逆动作：判断归 agent、机械动作归界面（ADR-035/037）。
+# 归档只是一次**文件移动**（题库的物理形态是文件，ADR-018 决定 2），
+# 不写任何事件；**删除不在面板里做**——那要走清理脚本（报告模式 + 备份 + 白名单）。
+#
+# ⚠ 这一行必须先有包再有行（否则导入不到 = 整棵插件树加载失败）。
+#   包由 scripts/install-lh-question-bank-ui.mjs 装好并逐字节校验过；
+#   要撤掉就把本行改成 disabled: true，或跑该脚本 --rollback 恢复组合文件。
+- insert:
+    - id: lh-question-bank-ui
+      name: '@lh/question-bank-ui'

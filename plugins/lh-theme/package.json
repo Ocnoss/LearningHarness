@@ -1,0 +1,39 @@
+{
+  "name": "@lh/theme",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "description": "LH 的配色套壳插件（客户端半）：浅色模式=奶油米色+橙色，深色模式=黑蓝。只重定义宿主的颜色变量，不碰任何组件样式。",
+  "main": "index.js",
+  "exports": {
+    ".": {
+      "default": "./index.js"
+    },
+    "./client": {
+      "default": "./client.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "dsh": {
+    "client": {
+      "platform": "web",
+      "immediately": true,
+      "inject": [
+        "@deepseek-ai/dsh-client-runtime"
+      ]
+    }
+  },
+  "files": [
+    "index.js",
+    "client.js"
+  ],
+  "lh": {
+    "kind": "ui",
+    "summary": "配色套壳：只重定义宿主的颜色变量（浅色=奶油米+橙，深色=黑蓝），不碰任何组件样式",
+    "inject": [],
+    "provides": { "modules": ["@lh/theme/client"], "themeVars": ["--lh-*"] },
+    "depends_on": [],
+    "loads_at": "profile",
+    "verified": { "gates": true, "live": true }
+  }
+}

@@ -1,0 +1,24 @@
+{
+  "name": "dsh-profile-web",
+  "private": true,
+  "dependencies": {
+    "@lh/course-tree": "file:../../../plugins/lh-course-tree",
+    "@lh/course-ui": "file:../../../plugins/lh-course-ui",
+    "@lh/event-store": "file:../../../plugins/lh-event-store",
+    "@lh/practice": "file:../../../plugins/lh-practice",
+    "@lh/question-bank": "file:../../../plugins/lh-question-bank",
+    "@lh/theme": "file:../../../plugins/lh-theme",
+    "@lh/workspace-ui": "file:../../../plugins/lh-workspace-ui",
+    "@lh/schedule": "file:../../../plugins/lh-schedule",
+    "@lh/schedule-ui": "file:../../../plugins/lh-schedule-ui",
+    "@lh/question-bank-ui": "file:../../../plugins/lh-question-bank-ui"
+  },
+  "dsh": {
+    "profile": {
+      "bundles": [
+        "@deepseek-ai/dsh-base",
+        "@deepseek-ai/dsh-web-app"
+      ]
+    }
+  }
+}

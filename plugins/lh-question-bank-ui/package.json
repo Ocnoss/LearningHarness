@@ -1,0 +1,78 @@
+{
+  "name": "@lh/question-bank-ui",
+  "version": "0.1.0",
+  "private": true,
+  "description": "LH 的题库管理面板：左列题库清单 + 右列三段（来源 / 题目 / 记录），与「课程目录」「学习日历」并列为一等中央面板（main 槽 key `lh-bank`）+ 侧栏图标（sidebar.panellist 同名 id）。只读为主，另带两个可逆的机械动作（归档 / 恢复）。服务端半在 /lh/bank 下给四条读路由与一条自检路由，读的一律复用 @lh/question-bank（题库 schema 与作答统计只有一处实现）。",
+  "type": "module",
+  "main": "index.js",
+  "exports": {
+    ".": {
+      "default": "./index.js"
+    },
+    "./client": {
+      "default": "./client.js"
+    },
+    "./view": {
+      "default": "./view.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "//dependencies": [
+    "跨包引用一律用**包名**（PLUGIN_CONTRACT §3）：本包会被 pnpm/安装脚本放进",
+    "profiles/<名>/node_modules，那时相对路径 `../lh-question-bank/view.js` 不可达，",
+    "而导入失败会让**整棵插件树加载失败、dsh 完全起不来**（实测踩过）。",
+    "",
+    "@lh/event-store：读事件日志（readEvents）与定位工作区（workspaceDir）——不写死盘符。",
+    "@lh/question-bank：**只取子路径**（/bank /attempt /question）。",
+    "  ⚠ 刻意**不** import 它的 index.js：那个文件会拖进 @lh/model-tier（模型白名单硬闸），",
+    "    而界面包完全没有那个依赖。为这个理由，isBankFile / listQuestionBanks / requireBank",
+    "    已在 2026-10-13 下沉到 bank.js（见 @lh/question-bank/bank.js 的注释）。"
+  ],
+  "dependencies": {
+    "@lh/event-store": "file:../lh-event-store",
+    "@lh/question-bank": "file:../lh-question-bank"
+  },
+  "dsh": {
+    "client": {
+      "platform": "web",
+      "inject": [
+        "@deepseek-ai/dsh-client-runtime",
+        "@deepseek-ai/dsh-client-ui-slots"
+      ]
+    }
+  },
+  "files": [
+    "index.js",
+    "client.js",
+    "view.js"
+  ],
+  "lh": {
+    "kind": "ui",
+    "summary": "题库管理：中央面板（main key lh-bank + sidebar.panellist 同名 id）= 左列题库清单（含已归档区）+ 右列三段（来源 / 题目 / 记录）；题目段可筛（题干 / 知识点 / 题型 / 做过没做过 / 最近答错），记录段把时间、作答、三态对错、来源、用时与**关联会话**列在一张表上，并如实报出对不上号的作答条数；两个可逆机械动作：归档 / 恢复。服务端半 GET /health|/banks|/source|/questions|/attempts 与 POST /archive|/restore（只动工作区里 lh-questions/ 下的文件，不写任何事件）",
+    "inject": ["webServer"],
+    "provides": {
+      "routes": [
+        "/lh/bank/health",
+        "/lh/bank/banks",
+        "/lh/bank/source",
+        "/lh/bank/questions",
+        "/lh/bank/attempts",
+        "/lh/bank/archive",
+        "/lh/bank/restore",
+        "/lh/bank/note"
+      ],
+      "slots": [
+        "main#lh-bank",
+        "sidebar.panellist#lh-bank",
+        "shell.overlay#lh-bank-directory"
+      ],
+      "modules": ["@lh/question-bank-ui/client", "@lh/question-bank-ui/view"]
+    },
+    "depends_on": ["@lh/event-store", "@lh/question-bank"],
+    "loads_at": "profile",
+    "//verified": [
+      "`verified` 由安装脚本在真跑过之后才置 true；此处初始为 false 是**如实**，不是遗漏。"
+    ],
+    "verified": { "gates": false, "live": false }
+  }
+}

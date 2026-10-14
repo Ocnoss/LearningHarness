@@ -1,0 +1,101 @@
+# ═══ LH 仓库的 .gitignore ═══
+#
+# 原则（ADR-023）：**只把"人写的东西"放进版本控制**。
+# 派生物、依赖、以及花钱能重新生成的东西都不进来——
+# 否则仓库会变成"一个装了几百兆中间产物的垃圾桶"，而真正的历史被埋掉。
+#
+# 但有两类"派生物"要单独想清楚（下面标了 ⚠），因为它们**重生成很贵**。
+
+# ── 依赖 ──
+node_modules/
+.pnpm-store/
+
+# ── 流水线中间产物（⚠ 见文末说明）──
+# data/ocr 是 610 页的 OCR 结果（重跑要几十分钟到小时级）；
+# data/align 是对齐与抽取结果；其余是测试沙盒与诊断输出。
+data/
+# bundle 的打包产物（源码在 bundle/ 入库，tgz 是 pnpm pack 重新生成的）
+lh-bundle-*.tgz
+
+# ── 我的工作副产物 ──
+# 副本同步前的备份（sync-lh-deps.mjs 写的）
+.lh-sync-backup/
+# 改 profile 配置前的整份备份（如 .lh-backup-desktop-<时间戳>/）。
+# 它是**回退路径**，必须留着；但它是派生物，不该进版本控制。
+.lh-backup-*/
+# 闸门输出、临时诊断
+*.log
+*-out.txt
+analysis-audit.txt
+# 探针/临时脚本（tmp-*）：有价值的固化改名后入库，其余不入库
+tmp-*
+# Python 字节码缓存（跑过脚本就有；不是人写的东西）
+__pycache__/
+
+# ── AI 工具的个人工作痕迹（2026-10-14 定：移出跟踪，只留本机）──
+# .workbuddy/memory 是协作记忆（含个人工作风格画像与本机环境细节）、
+# .qoder/plans 是会话计划草稿——都与"别人拉取仓库后对接 dsh"无关，
+# 而公开仓库不该捎带个人画像。
+.workbuddy/
+.qoder/
+
+# ── 题库备份（它们是 patch-bank-analysis.mjs 写的 .bak-*；正式题库本身在仓库外）──
+*.bak-*
+*.bak-analysis-*
+# 配置改动前的时间戳备份（如 agent.cordis.yml.20260921-152654.bak；*.bak-* 匹配不到这种）
+*.bak
+
+# ── 环境与编辑器 ──
+.env
+.env.*
+!.env.example
+*.swp
+.DS_Store
+Thumbs.db
+
+# ═══ 本项目自己的 dsh 家（`.dsh/`，2026-09-20 迁移，见 ADR-031）═══
+#
+# 背景：开发从"`~/.dsh` + 工作区"两个地方，迁成**工作区自持**——
+# 用 `DSH_HOME=<仓库>/.dsh/` 让 agent preset、profile、会话都跟着仓库走，
+# 于是任何 IDE/CLI 打开这个仓库都能完整开发（`node scripts/lh-dev.mjs`）。
+#
+# 但"家"里有三类东西**必须分开对待**：
+#
+#   1. **配置**（`.agent-presets/`、`profiles/*/package.json`、`profiles/*/cordis.patch.yml`、
+#      `settings.yaml`）→ **入库**。它们是"人写的东西"，也是这个仓库自持的关键；
+#      `settings.yaml` 里的 apiKey 写的是**环境变量名**（`*_API_KEY`），不是密钥本身（实测核对过）。
+#   2. **安装副本**（`profiles/*/node_modules/`）→ 忽略。与仓库根的 `node_modules/` 同理，
+#      而且它是 pnpm 拷贝出来的派生物（`pnpm install` 一条命令重建）。
+#   3. **运行数据**（会话日志、附件、缓存、凭据）→ 忽略。
+#      会话日志按大小会涨到几十 MB；**凭据绝不能被 `git add -A` 扫进去**。
+#
+# ⚠ `lh-install.json` **不入库**（2026-10-14 改：此前入库，理由已失效）。
+#   它是"装的时候写下"的**机器本地配置**（自己的头注释就是这么定义的）：
+#   `workspace` 是学习者的资料目录，别人机器上必然不同；把作者的绝对路径
+#   推到公开仓库里，clone 的人会**静默指错**（数据写进不存在的目录）。
+#   入库的是模板 `lh-install.json.example`；真文件与 sync 生成的 profile 副本都忽略。
+lh-install.json
+.dsh/profiles/*/lh-install.json
+.dsh/profiles/*/node_modules/
+.dsh/sessions/
+.dsh/attachments/
+.dsh/storages/
+.dsh/llm-deepseek/
+.dsh/.anonymous-user-id
+.dsh/.credentials.yaml
+.dsh/**/trace.log
+.dsh/*.log
+
+# ═══ ⚠ 两个刻意的取舍，写在这里而不是让它悄悄成立 ═══
+#
+# 1. `data/` 被忽略了 —— **OCR 结果也一起被忽略了**。
+#    代价：新克隆一台机器要重新 OCR（那是最贵的一步，几百页）。
+#    理由：它是**派生物**（有脚本可重跑），而且体积大；
+#    把它放进 git 会让每次提交都背着几百兆历史。
+#    如果将来"重生成成本"变得不可接受，正确的做法不是塞进 git，
+#    而是把它归档到别处（或单独一个带 LFS 的仓库）。
+#
+# 2. **学习者的工作区（题库 JSON、作答记录）不在这个仓库里**，
+#    它在 `lh-install.json` 的 `workspace` 指向的目录。
+#    这是有意的：**学习资料不是代码**，不该跟着代码一起提交。
+#    （作答记录在 LH 事件日志里，同一个工作区。）

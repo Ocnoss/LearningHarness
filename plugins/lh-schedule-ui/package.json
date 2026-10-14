@@ -1,0 +1,75 @@
+{
+  "name": "@lh/schedule-ui",
+  "version": "0.1.0",
+  "private": true,
+  "description": "LH 的学习日历：把「计划（日程）/ 事实（哪段对话动过）/ 课程动作」按日期索引到一张月历上，做成一等中央面板（main 槽 key `lh-calendar`）+ 侧栏图标（sidebar.panellist 同名 id）。服务端半给一条自检路由（GET /health）、一条读路由（GET /calendar，支持 month/week）与三条写路由（POST /create|/update|cancel）——写一律复用 @lh/schedule/commands，与 agent 工具同一份代码。",
+  "type": "module",
+  "main": "index.js",
+  "exports": {
+    ".": {
+      "default": "./index.js"
+    },
+    "./client": {
+      "default": "./client.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "//dependencies": [
+    "用 file: 相对路径指向源码目录（PLUGIN_CONTRACT §3，与 @lh/workspace-ui 同形）。",
+    "本包会被 pnpm 装进 profiles/<名>/node_modules，那时相对 import 会断。",
+    "@lh/event-store：读事件日志（readEvents）。",
+    "@lh/course-tree：唯一目录视图（buildDirectoryView）——用它给界面提供课程下拉清单，",
+    "  界面绝不自己再推一遍课程树。（本包是 profile 行，profile 的 node_modules 里确实有这个包；",
+    "  而 preset 那一半 @lh/schedule 刻意不依赖它，理由见那个包的 package.json。）",
+    "@lh/schedule：唯一投影 + 唯一写入 + 唯一日历视图。界面不自己拼日程事件。"
+  ],
+  "dependencies": {
+    "@lh/event-store": "file:../lh-event-store",
+    "@lh/course-tree": "file:../lh-course-tree",
+    "@lh/schedule": "file:../lh-schedule"
+  },
+  "dsh": {
+    "client": {
+      "platform": "web",
+      "inject": [
+        "@deepseek-ai/dsh-client-runtime",
+        "@deepseek-ai/dsh-client-ui-slots"
+      ]
+    }
+  },
+  "files": [
+    "index.js",
+    "client.js"
+  ],
+  "lh": {
+    "kind": "ui",
+    "summary": "学习日历：中央面板（main key lh-calendar + sidebar.panellist 同名 id）= **月 / 周 / 待办 三种读法**；月与周是网格（每天三类内容：日程 / 当日会话 / 课程动作）+ 当天详情（新建、改期、提前完成、无限期推迟、撤销、绑课程与对话），**待办**是一条跨月的决策列表（无日期待办置顶 + 欠账 + 按时间顺序的未来日程，行内可完成/推迟/无限期/撤销）；下端常驻验收期倒计时条；服务端半 GET /health|/calendar|/todo 与 POST /create|/update|cancel（写复用 @lh/schedule/commands）",
+    "inject": ["webServer"],
+    "provides": {
+      "routes": [
+        "/lh/schedule/health",
+        "/lh/schedule/calendar",
+        "/lh/schedule/todo",
+        "/lh/schedule/create",
+        "/lh/schedule/update",
+        "/lh/schedule/cancel"
+      ],
+      "slots": [
+        "main#lh-calendar",
+        "sidebar.panellist#lh-calendar",
+        "shell.overlay#lh-schedule-calendar",
+        "settings.general.item#lh-schedule-options"
+      ],
+      "modules": ["@lh/schedule-ui/client"]
+    },
+    "depends_on": ["@lh/event-store", "@lh/course-tree", "@lh/schedule"],
+    "loads_at": "profile",
+    "//verified": [
+      "gates：2026-10-10 跑过 `node scripts/check-all.mjs` —— 28 绿 / 0 不该红（共 29 项，唯一红的是 check-restart=需要重启）。",
+      "  其中本包的路由自检 120 条断言 × 3 份副本真跑过六条路由（含 /todo 与「无限期推迟」往返）。",
+      "live：/health、/calendar、/todo、/create、/cancel 都在**运行中的**宿主上打过并返回 200。",
+      "⚠ 未经人工肉眼确认的部分：面板在浏览器里的**观感**（配色/布局/动效），作者需自己看一眼。"
+    ],
+    "verified": { "gates": true, "live": true }
+  }
+}

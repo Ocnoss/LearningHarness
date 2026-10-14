@@ -1,0 +1,34 @@
+{
+  "name": "lh-workspace",
+  "private": true,
+  "version": "0.0.1",
+  "type": "module",
+  "description": "LH 的工作区：插件的家。dsh 按绝对路径加载 plugins/ 下的文件，但**测试**要能解析包名，所以这里也声明这些包。",
+  "//dependencies": [
+    "为什么要在这里也声明 LH 自己的包：",
+    "插件之间的引用已经改成**包名**（如 `from '@lh/event-store/store'`），",
+    "因为相对路径 `../lh-event-store/store.js` 在 install 到 profile 之后就断了",
+    "（pnpm 用复制而非软链，目录名由包名派生），而导入失败会让 dsh 完全无法启动。",
+    "",
+    "改成包名后，**源码目录里的测试**也需要能解析这些包名——",
+    "否则 `node plugins/lh-question-bank/selftest.mjs` 会找不到模块。",
+    "",
+    "⚠ 这里曾经写的是 `file:plugins/...`，并且注释里写着'pnpm 会软链回源码，",
+    "所以不存在副本陈旧问题'——**那句话是错的**。实测：pnpm 对 `file:` 目录依赖",
+    "是复制到 .pnpm 下再软链到那份拷贝，源码改了它不动。",
+    "这条错误注释让一个陈旧副本藏了很久，直到 signal.js 引用的 paths.js 在副本里",
+    "根本不存在、测试报 ERR_PACKAGE_PATH_NOT_EXPORTED 才暴露。",
+    "",
+    "现在改用 `workspace:*`（配合根目录的 pnpm-workspace.yaml）：",
+    "pnpm 会把 node_modules/@lh/* **直接软链到 plugins/ 下的源码**，",
+    "源码即生效，这一层不再有副本。profile 那边是另一回事（见 scripts/sync-lh-deps.mjs）。"
+  ],
+  "dependencies": {
+    "@lh/event-store": "workspace:*",
+    "@lh/question-bank": "workspace:*",
+    "zod": "^4.4.3",
+    "@lh/schedule": "workspace:*",
+    "@lh/schedule-ui": "workspace:*",
+    "@lh/question-bank-ui": "workspace:*"
+  }
+}

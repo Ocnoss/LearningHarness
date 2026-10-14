@@ -1,0 +1,55 @@
+{
+  "name": "@lh/practice",
+  "version": "0.0.2",
+  "private": true,
+  "description": "LH 的刷题界面：服务端半注册数据路由（取题/提交作答），客户端半在 shell.overlay 上渲染可点击的刷题面板。",
+  "type": "module",
+  "main": "index.js",
+  "exports": {
+    ".": {
+      "default": "./index.js"
+    },
+    "./client": {
+      "default": "./client.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "//dependencies": [
+    "用 file: 相对路径指向源码目录。",
+    "为什么必须显式声明（而不是靠相对 import）：本包会被 pnpm 装进",
+    "profiles/web/node_modules 下，那时 `../lh-question-bank/index.js` 这种相对路径",
+    "不再可达——Node 会把它解析成 '@lh/lh-question-bank' 并抛 ERR_MODULE_NOT_FOUND，",
+    "而插件的导入失败会让**整棵插件树加载失败、dsh 完全无法启动**（实测踩过）。",
+    "声明成依赖后，pnpm 会把这两个包放在**同级 node_modules** 下，包名导入稳定可解析。"
+  ],
+  "dependencies": {
+    "@lh/event-store": "file:../lh-event-store",
+    "@lh/question-bank": "file:../lh-question-bank"
+  },
+  "dsh": {
+    "client": {
+      "platform": "web",
+      "inject": [
+        "@deepseek-ai/dsh-client-runtime",
+        "@deepseek-ai/dsh-client-ui-slots"
+      ]
+    }
+  },
+  "files": [
+    "index.js",
+    "client.js"
+  ],
+  "lh": {
+    "kind": "ui",
+    "summary": "刷题界面：服务端半注册 /lh/practice 两条数据路由（取题 / 提交作答），客户端半在 shell.overlay 渲染可拖动缩放的刷题面板，并在对话里放一张入口卡片",
+    "inject": ["webServer"],
+    "provides": {
+      "routes": ["/lh/practice/bank", "/lh/practice/attempt", "/lh/practice/pending"],
+      "slots": ["shell.overlay", "tool.call.toolview#start_practice"],
+      "modules": ["@lh/practice/client"]
+    },
+    "depends_on": ["@lh/event-store", "@lh/question-bank"],
+    "loads_at": "profile",
+    "verified": { "gates": true, "live": true }
+  }
+}

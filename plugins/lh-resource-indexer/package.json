@@ -1,0 +1,33 @@
+{
+  "name": "@lh/resource-indexer",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "description": "LH 的学习资源索引器：扫描资料文件夹，产出可寻址的资源记录与索引文档。资源信封遵循 docs/archive/decisions/009。",
+  "main": "index.js",
+  "exports": {
+    ".": {
+      "default": "./index.js"
+    },
+    "./scan": {
+      "default": "./scan.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "index.js",
+    "scan.js"
+  ],
+  "dependencies": {
+    "@lh/event-store": "file:../lh-event-store"
+  },
+  "lh": {
+    "kind": "capability",
+    "summary": "扫描资料文件夹 → 索引文档 → 记一条 LH 资源；只做机械转换，不判断这是不是学习资料",
+    "inject": ["tools"],
+    "provides": { "tools": ["index_learning_resources"], "events": ["lh/resource/indexed"] },
+    "depends_on": ["@lh/event-store"],
+    "loads_at": "preset",
+    "verified": { "gates": true, "live": true }
+  }
+}

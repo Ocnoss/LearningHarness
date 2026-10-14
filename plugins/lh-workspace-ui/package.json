@@ -1,0 +1,60 @@
+{
+  "name": "@lh/workspace-ui",
+  "version": "0.3.1",
+  "private": true,
+  "description": "LH 的课程目录：把「课程树 + 每门课挂了哪些对话 + 本机对话索引」做成一等中央面板（main 槽 key `lh`）+ 侧栏图标（sidebar.panellist 同名 id）。服务端半给两条读路由（GET /tree、GET /impact）与四条写路由（POST /course|/rename|/bind|/delete），写一律复用 @lh/course-tree/commands —— 与 agent 工具同一份代码。删除是两段式：先 GET /impact 看影响面，再带 confirm:true 才真的删。",
+  "type": "module",
+  "main": "index.js",
+  "exports": {
+    ".": {
+      "default": "./index.js"
+    },
+    "./client": {
+      "default": "./client.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "//dependencies": [
+    "用 file: 相对路径指向源码目录（PLUGIN_CONTRACT §3，与 @lh/course-ui 同形）。",
+    "本包会被 pnpm 装进 profiles/<名>/node_modules，那时相对 import 会断。",
+    "@lh/event-store：读事件日志（readEvents）。",
+    "@lh/course-tree：唯一投影（directory）与唯一写入（commands）—— 界面绝不自己再推一遍树、也绝不自己拼事件信封。"
+  ],
+  "dependencies": {
+    "@lh/event-store": "file:../lh-event-store",
+    "@lh/course-tree": "file:../lh-course-tree"
+  },
+  "dsh": {
+    "client": {
+      "platform": "web",
+      "inject": [
+        "@deepseek-ai/dsh-client-runtime",
+        "@deepseek-ai/dsh-client-ui-slots"
+      ]
+    }
+  },
+  "files": [
+    "index.js",
+    "client.js"
+  ],
+  "lh": {
+    "kind": "ui",
+    "summary": "课程目录：中央面板（main key lh + sidebar.panellist 同名 id）= 可折叠课程树（每根分支一色）+ 课程操作按钮组（改名/加子课程/删除）+ 这门课的对话 + 本机对话索引（可过滤、可一键归课）；服务端半 GET /tree|/impact 与 POST /course|/rename|/bind|/delete（写复用 @lh/course-tree/commands）",
+    "inject": ["webServer"],
+    "provides": {
+      "routes": [
+        "/lh/workspace/tree",
+        "/lh/workspace/impact",
+        "/lh/workspace/course",
+        "/lh/workspace/rename",
+        "/lh/workspace/bind",
+        "/lh/workspace/delete"
+      ],
+      "slots": ["main#lh", "sidebar.panellist#lh", "settings.general.item#lh-reload-ui"],
+      "modules": ["@lh/workspace-ui/client"]
+    },
+    "depends_on": ["@lh/event-store", "@lh/course-tree"],
+    "loads_at": "profile",
+    "verified": { "gates": true, "live": false }
+  }
+}

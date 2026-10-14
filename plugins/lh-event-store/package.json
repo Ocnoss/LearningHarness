@@ -1,0 +1,60 @@
+{
+  "name": "@lh/event-store",
+  "version": "0.0.4",
+  "private": true,
+  "type": "module",
+  "description": "LH 自己的 append-only 事件日志，并以服务形式对外提供写入接口（ctx.lhEvents）。宿主（dsh）的会话日志词汇表对外部插件封闭，所以 LH 的事件必须自持——见 docs/archive/decisions/011、012。同时提供 LH 数据目录的定位（paths.js）——**不许写死盘符**。",
+  "main": "index.js",
+  "exports": {
+    ".": {
+      "default": "./index.js"
+    },
+    "./store": {
+      "default": "./store.js"
+    },
+    "./paths": {
+      "default": "./paths.js"
+    },
+    "./trace-reader": {
+      "default": "./trace-reader.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "//files": [
+    "**运行时真正会被加载的文件集**，不是'目录里有什么'。",
+    "两个用途，缺一不可：",
+    "  1. pnpm 按它决定拷贝哪些文件（file: 依赖会过滤掉测试和日志）；",
+    "  2. scripts/check-installed-copies.mjs 按它比对源码与已安装副本——",
+    "     副本是**快照不是软链**，改了源码不同步就会静默跑旧代码。",
+    "所以：**新增运行时文件必须同时加到这里**，否则闸门会（正确地）报缺。"
+  ],
+  "files": [
+    "index.js",
+    "store.js",
+    "paths.js",
+    "trace-reader.js"
+  ],
+  "dependencies": {
+    "zod": "^4.4.3"
+  },
+  "//lh": [
+    "**可机械枚举的自我描述**（ADR-024 决定 3）。它存在的理由：",
+    "agent 说'现在有哪些插件、各自能干什么、验过什么'时，需要一个不会过期的来源。",
+    "读 package.json 比读文档可靠——文档会忘更新，而这是包的一部分。",
+    "`verified` 让'验过什么/没验过什么'变成可查询的事实，而不是散在经验文件里。",
+    "将来 lh-plugin-development 要靠它来盘点生态，所以**新增插件必须写这一段**。"
+  ],
+  "lh": {
+    "kind": "kernel",
+    "summary": "LH 自己的 append-only 事件日志与服务（ctx.lhEvents），并统一提供数据目录/工作区的定位（paths）",
+    "inject": ["sessions"],
+    "provides": {
+      "services": ["lhEvents"],
+      "modules": ["@lh/event-store/store", "@lh/event-store/paths"],
+      "events": ["lh/trace/observed"]
+    },
+    "depends_on": [],
+    "loads_at": "preset",
+    "verified": { "gates": true, "live": true }
+  }
+}

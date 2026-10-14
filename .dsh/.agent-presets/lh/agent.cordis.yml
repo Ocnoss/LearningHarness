@@ -1,0 +1,181 @@
+# LH 的 agent preset —— LH 插件的挂载点。
+#
+# ─── 为什么这个文件在 .dsh 里，而插件源码在工作区 ───
+# 这里只放"配置"，源码放工作区（D:\LearningHarnessv0.1\plugins\）。
+# 原因：preset 目录在用户 home 下，Node 的包解析向上走永远到不了宿主，
+# 所以插件里 import 'zod' 这类裸包名会失败（实测 ERR_MODULE_NOT_FOUND）。
+# 工作区有自己的 node_modules，插件住在那里就能正常解析依赖。
+#
+# ─── 为什么用绝对路径 ───
+# 相对路径是相对本文件所在目录解析的，插件不在旁边，所以必须用绝对路径。
+# 注意：绝对路径在 preset 行里是【可用】的——宿主会把它转成 file: URL
+#       （dsh-agent-presets/lib/index.js:496）。
+#       （"绝对 Windows 路径不可用"那条只对 profile 的 cordis.patch.yml 成立：
+#        那条路径上 boot() 不传 bareModuleBaseUrl，做这个转换的 Include 子类没被安装。）
+#
+# ─── 加行的纪律（踩过，代价是整个会话不可用）───
+# 一个行未激活会让 mountPreset 抛错，于是**该 preset 的所有会话都建不起来**。
+# 所以：这一行的任何依赖都必须是"加载时就能确定可用"的，不能是"将来某刻会可用"的。
+# 并且新增行之后必须在真实会话里验证一次——discoverPresets() 的 broken 字段
+# 只做 YAML 形状检查，查不出"行在等一个不存在的服务"。
+#
+# 行的写法对照标准 preset（dsh 安装目录/config/agent-presets/standard/agent.cordis.yml）。
+
+# ═══════════════════════════════════════════════════════════════════════════
+# 基础能力行（2026-09-20 新增，来自 standard preset 的同一批行）
+#
+# ─── 为什么需要它们 ───
+# 实测（`scripts/inspect-session-tools.mjs` 从宿主会话日志挖出的工具清单）：
+# LH 会话此前只有 **9 个工具**，全是 LH 插件注册的；
+# 而默认会话有 32 个。也就是说 LH 会话**没有 shell、没有文件读写、没有网络**——
+# 于是"把 2400 题入库"这件事在 LH 会话里根本发起不了：
+#   · OCR / 排序 / 对齐 / 抽答案是脚本 → 没有 shell 跑不了；
+#   · 目录里有哪些中间产物 → 没有 fs 看不见。
+#
+# 作者的判断（2026-09-20）：LH 本身要带**开发能力**（下一步做 lh-plugin-development，
+# 支持用户在 LH 会话里把自己的学习流程落成插件），所以 standard preset 的这些能力
+# 本来就该有。并且产品立场是"**在 LH 里开发，而不是在 dsh 里开发**"——
+# 对非专业开发者，LH 要把 dsh 的开发表达方式**隐藏**起来，只留"把学习习惯落地"这层。
+#
+# ─── 为什么这一批是安全的（照 standard preset 的分类抄，不是猜）───
+# standard preset 顶部写明：**只有"发布服务"的行必须放进带 `isolate` 的组**，
+# 否则它会发布到 root realm、与别的 preset 撞名，`dsh-agent-presets` 在挂载时就拒绝。
+# 而下面这几行**只注册进宿主 `tools` / `skills` 注册表、不 provide 任何服务**，
+# 所以**不需要 realm**，可以直接加为普通行。
+#
+# ─── 加行的纪律（本文件顶部那条，代价是整个 preset 的会话都建不起来）───
+# 所以这一批只收"无 realm 依赖"的行；带 `isolate` 的组（planning / compaction /
+# delegation）留到第二批，并且要各自单独验证——它们是真正会挂载失败的形状。
+# ═══════════════════════════════════════════════════════════════════════════
+
+# ── shell ──
+# bash 与 pwsh 二选一：`disabled` 的写法与 standard preset 完全一致
+# （平台判断写在 `!!js` 表达式里，不靠人记住哪个平台用哪个）。
+- id: tool-bash
+  name: '@deepseek-ai/dsh-tool-bash'
+  disabled: !!js process.platform === 'win32'
+
+- id: tool-pwsh
+  name: '@deepseek-ai/dsh-tool-pwsh'
+  disabled: !!js process.platform !== 'win32'
+
+# ── 文件系统 ──
+# 两个都只注册进 tools 注册表；`fs` 服务与它的 policy 留在宿主面。
+- id: tool-fs
+  name: '@deepseek-ai/dsh-tool-fs'
+
+- id: tool-fs-search
+  name: '@deepseek-ai/dsh-tool-fs-search'
+  config:
+    sampleOverCapGlobResults: false
+
+# ── 后台任务（只加模型可见的控制；任务注册表留在宿主面）──
+- id: tool-jobs
+  name: '@deepseek-ai/dsh-tool-jobs'
+
+# ── 其余模型可见行 ──
+- id: tool-ask-user
+  name: '@deepseek-ai/dsh-tool-ask-user'
+
+- id: tool-todo
+  name: '@deepseek-ai/dsh-tool-todo'
+  config:
+    allowParallelInProgress: true
+
+# `web` 服务与搜索 provider 留在宿主面，这里只加模型可见的那个工具。
+# 写资料/查答案时会用到（`fetch: false` 与 standard preset 一致）。
+- id: tool-web
+  name: '@deepseek-ai/dsh-tool-web'
+  config:
+    fetch: false
+    searchTimeoutMs: 60000
+
+# ═══════════════════════════════════════════════════════════════════════════
+# LH 自己的插件行
+# ═══════════════════════════════════════════════════════════════════════════
+
+# LH 自己的事件日志（内核级插件）：
+# 不产生教学判断，只提供 append-only 的事实源与投影（契约 §1.1：内核拥有语法，插件拥有判断）。
+- id: lh-event-store
+  name: 'D:/LearningHarnessv0.1/plugins/lh-event-store/index.js'
+
+# LH 的坐标记录器（第一个记录器插件）：
+# 订阅宿主的会话事件流，把语义事件以 (sessionId, seq) 坐标索引进 LH 日志，不抄内容。
+# 它直接 import 存储模块、不依赖服务——因为 preset 是 agent 作用域，
+# 够不着 host 面提供的服务（见 docs/decisions/014 补充决定 6）。
+- id: lh-recorder-trace
+  name: 'D:/LearningHarnessv0.1/plugins/lh-recorder-trace/index.js'
+
+# LH 的学习资源索引器（第一个功能性插件）：
+# 扫描资料文件夹 → 生成 Markdown 索引文档 → 记为一条 LH 资源（文档外置到 content_ref）。
+# 注册一个模型可调用的工具 index_learning_resources。
+# 它只做机械扫描、不做质量判断——判断留给后续的分类器插件（契约 §1.1）。
+- id: lh-resource-indexer
+  name: 'D:/LearningHarnessv0.1/plugins/lh-resource-indexer/index.js'
+
+# LH 的模型档位中间件：
+# 把插件的"建议档位"解析成具体模型、发起调用、把降级事实作为数据返回，
+# 并把档位可用性写进运行时上下文（order 116，与宿主的沙箱/审批政策同带）。
+# 它绝不阻断、绝不弹框、绝不改宿主 adaptor——问用户是 agent 的活（见 docs/decisions/015 与经验记录）。
+- id: lh-model-tier
+  name: 'D:/LearningHarnessv0.1/plugins/lh-model-tier/index.js'
+
+# LH 的题库（当前阶段：对象与接口）：
+# 注册两个模型可调用的工具 —— import_questions（把**已结构化**的题写进题库）
+# 与 record_attempt（记录一次作答并判分）。
+# **不做题目抽取**（OCR / 版式解析）：抽取是判断、且是独立工程（见 docs/decisions/017 决定 7、018 决定 7）。
+# 它的依赖只有文件系统与 lh-event-store，两个工具在装载时就绪、不等任何服务——
+# 这是"加行纪律"要求的（见本文件顶部注释）。
+- id: lh-question-bank
+  name: 'D:/LearningHarnessv0.1/plugins/lh-question-bank/index.js'
+
+# LH 的递归课程树（ADR-032）：
+# 树 = `lh/course/*` 事件的投影（事件溯源，唯一实现 tree.js）。注册三个模型可调用的工具：
+#   create_course（建课程/子课程）、list_courses（看整棵树）、enter_course（把当前会话绑到某节点）。
+# enter_course 靠工具执行上下文 exec.agent.session.id 拿会话身份（契约约束 8：HTTP 路由拿不到），
+# 所以"会话按课程分界"只能落在对话工具这一侧。
+# 这一行**只注册工具、不 provide root-realm 服务**，故不需要 isolate realm（同上面那批基础能力行）。
+- id: lh-course-tree
+  name: 'D:/LearningHarnessv0.1/plugins/lh-course-tree/index.js'
+
+# LH 的断言器（ADR-033 / ADR-034）—— ⚠ **2026-10-08 起暂时不挂**（作者决定）
+#
+# 它做什么：订阅会话事件流；当**已 enter_course** 的学习会话里出现学习者输入时，
+# 按节点选断言器、真调模型（@lh/model-tier 的 flash 档）产一句断言，沿课程树向上递归传递，
+# 每跳写一条 `lh/assertion/made`（scope=节点，derived_from 成链，propagate_to 逐级指父）。
+#
+# 为什么是 `disabled: true` 而不是把这一行删掉：
+#   删掉之后"要不要断言"这件事就没了出处——下次想开的人得重新读一遍它是什么、依赖什么。
+#   留一行 disabled + 理由，开回来是改一个词，而且**它缺席这件事本身是显式的**。
+#
+# 作者的原话是"先暂时不加断言系统"，所以顺序是：先把课程管理做厚，断言晚点上。
+# 开回来之前要知道代价：**它一挂上，"把对话绑到某门课"就会触发真模型调用（花 token）**。
+# 三重护栏仍然有效：仅 lh 会话 + 必须已绑定课程 + 环境开关 LH_ASSERTER=off 可整条静默。
+- id: lh-asserter
+  name: 'D:/LearningHarnessv0.1/plugins/lh-asserter/index.js'
+  disabled: true
+
+# 已退役的行（保留说明，避免以后有人以为是漏了）：
+#   lh-hello —— 开发期探针，验证"挂载成功"与"系统提示词注入生效"。
+#     它往每条会话注入一段验证标记，长期是噪声；验证完删除。
+#     提示词注入的能力留待 context compiler 需要时再用（用法见 docs/experience）。
+#   lh-llm-probe —— 验证"preset 作用域的插件能否调用宿主模型服务"。
+#     结论：**能**（web profile 下 listProviders() 返回 3 个 provider，
+#     并对 deepseek-official 与 xiaomi-token-plan-ams 各发过一次真实调用、均收到回复）。
+#     它的验证职责已收进 lh-model-tier 的自检：设 LH_MODEL_TIER_SELFTEST=1 启动即可复验，
+#     默认关闭（否则每建一个 LH 会话就白花一次模型调用）。
+
+# LH 的学习日程（@lh/schedule）：
+# 日程 = lh/schedule/* 事件的投影（唯一实现 schedule.js，写入 commands.js，
+# 按日期索引的视图在 calendar.js）。注册四个模型可调用的工具：
+#   create_schedule（新建日程）、list_schedule（**按日期区间读**：计划 + 这几天哪些对话动过
+#   + 课程动作）、update_schedule（改期/改名/标记完成/绑课程/绑当前这段对话）、
+#   cancel_schedule（撤销，可恢复，建议给它原因）。
+# 并把"今天有哪些日程、欠了什么"注入运行时上下文 lh:agenda（order 118）——
+# 不知道今天是哪天，模型就没法把"明天下午"翻译成一个日期。
+#
+# 它**只注册工具、不 provide root-realm 服务**，故不需要 isolate realm（同上面那批行）。
+# 静态导入链只碰 @lh/event-store（它在仓库根的 node_modules 里），
+# 刻意不碰 @lh/course-tree——理由见该包 package.json 的 "//dependencies"。
+- id: lh-schedule
+  name: 'D:/LearningHarnessv0.1/plugins/lh-schedule/index.js'

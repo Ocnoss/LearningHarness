@@ -1,0 +1,29 @@
+{
+  "name": "@lh/recorder-trace",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "description": "LH 的坐标记录器：把宿主会话日志里的语义事件，以 (sessionId, seq) 坐标的形式索引进 LH 自己的事件日志。不抄内容——见 docs/archive/decisions/014。",
+  "main": "index.js",
+  "exports": {
+    ".": {
+      "default": "./index.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "index.js"
+  ],
+  "dependencies": {
+    "@lh/event-store": "file:../lh-event-store"
+  },
+  "lh": {
+    "kind": "recorder",
+    "summary": "把宿主会话日志里的语义事件以 (sessionId, seq) 坐标索引进 LH 事件日志；只记坐标不抄内容",
+    "inject": ["sessions"],
+    "provides": { "events": ["lh/trace/observed"] },
+    "depends_on": ["@lh/event-store"],
+    "loads_at": "preset",
+    "verified": { "gates": true, "live": true }
+  }
+}

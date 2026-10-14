@@ -1,0 +1,20 @@
+{
+  "name": "@lh/bundle",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "LH 学习模式（preset-lh）的 bundle：把 $DSH_HOME/.agent-presets/lh/ 迁到 declaration row。",
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    }
+  },
+  "dependencies": {
+    "@lh/event-store": "file:../plugins/lh-event-store",
+    "@lh/recorder-trace": "file:../plugins/lh-recorder-trace",
+    "@lh/resource-indexer": "file:../plugins/lh-resource-indexer",
+    "@lh/model-tier": "file:../plugins/lh-model-tier",
+    "@lh/question-bank": "file:../plugins/lh-question-bank",
+    "@lh/asserter": "file:../plugins/lh-asserter"
+  }
+}
